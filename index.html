@@ -74,7 +74,7 @@
   .loan-warn{display:block;margin-top:2px;font-size:9px;font-weight:700;color:#c0392b;background:#fde3e1;border-radius:4px;padding:1px 3px}
   .chip.sel{box-shadow:0 0 0 3px #ffd27a;cursor:grabbing}
 
-  .ns{background:var(--indigo);color:#fff;border-radius:50%;display:flex;align-items:center;justify-content:center;
+  .ns{background:var(--indigo);color:#fff;border-radius:40%;display:flex;align-items:center;justify-content:center;
       font-weight:700;letter-spacing:.03em;width:118px;height:70px;padding:8px;text-align:center;line-height:1.3;position:absolute}
   .ns-handle{position:absolute;right:10px;bottom:10px;width:15px;height:15px;cursor:nwse-resize;display:none}
   .ns-handle::after{content:"";position:absolute;right:2px;bottom:2px;width:9px;height:9px;
@@ -486,16 +486,15 @@ function loadState(){ try{
 /* ---------- admin actions ---------- */
 function refreshUsers(){ const cur=user(); document.getElementById("userSel").innerHTML=USERS.map(u=>`<option ${u===cur?'selected':''}>${u}</option>`).join(""); }
 function addStaff(){ const v=document.getElementById("newStaff").value.trim(); if(!v) return; if(USERS.includes(v)){toast("同じ氏名があります");return;} USERS.push(v); refreshUsers(); renderAdmin(); saveState(); toast("職員を追加"); }
-function delStaff(i){ if(USERS.length<=1){toast("最低1人は必要です");return;} if(!confirm(`${USERS[i]} を削除しますか？`))return; USERS.splice(i,1); refreshUsers(); renderAdmin(); saveState(); }
+function delStaff(i){ if(USERS.length<=1){toast("最低1人は必要です");return;} const name=USERS[i]; USERS.splice(i,1); refreshUsers(); renderAdmin(); saveState(); toast(`${name} を削除しました`); }
 function renStaff(i,v){ v=v.trim(); if(!v){renderAdmin();return;} USERS[i]=v; refreshUsers(); saveState(); }
 
 function addRoom(){ const name=document.getElementById("newRoomName").value.trim(); if(!name){toast("部屋名を入力");return;}
   const bc=Math.max(1,parseInt(document.getElementById("newRoomBeds").value)||1);
   ROOMS.push({key:"k"+Date.now().toString(36),name,band:"bottom",bedCount:bc,x:14,y:480}); renderAll(); toast(`${name} を追加（マップ左下）。配置編集で移動できます`); }
 function delRoom(key){ const r=roomByKey(key); const inside=Object.values(M).filter(m=>m.loc.k==="room"&&m.loc.room===key);
-  if(!confirm(`${r.name} を削除しますか？${inside.length?`\n（病床のマットレス${inside.length}台は倉庫へ移動します）`:""}`))return;
   inside.forEach(m=>{ logMove(m.id,locLabel(m.loc),"倉庫"); m.loc={k:"store"}; });
-  ROOMS=ROOMS.filter(x=>x.key!==key); renderAll(); }
+  ROOMS=ROOMS.filter(x=>x.key!==key); renderAll(); toast(`${r.name} を削除しました${inside.length?`（マットレス${inside.length}台を倉庫へ移動）`:""}`); }
 function editRoom(key,field,val){ const r=roomByKey(key); if(!r) return;
   if(field==="name"){ val=val.trim(); if(val) r.name=val; }
   else if(field==="bedCount"){ const n=Math.max(1,Math.min(8,parseInt(val)||1));
@@ -506,7 +505,7 @@ function editRoom(key,field,val){ const r=roomByKey(key); if(!r) return;
 
 function addMat(){ const id=document.getElementById("newMatId").value.trim(); if(!id){toast("IDを入力");return;} if(M[id]){toast("そのIDは既にあります");return;}
   const type=document.getElementById("newMatType").value; M[id]={id,type,loc:{k:"store"}}; logMove(id,"—（新規追加）","倉庫"); renderAll(); toast(`${id} を倉庫に追加`); }
-function delMat(id){ if(!confirm(`${id} を削除しますか？`))return; logMove(id,locLabel(M[id].loc),"—（削除）"); delete M[id]; renderAll(); }
+function delMat(id){ logMove(id,locLabel(M[id].loc),"—（削除）"); delete M[id]; renderAll(); toast(`${id} を削除しました`); }
 function editMat(id,field,val){ const m=M[id]; if(!m) return;
   if(field==="type"){ m.type=val; }
   else if(field==="id"){ val=val.trim(); if(!val||val===id){renderAll();return;} if(M[val]){toast("そのIDは既にあります");renderAll();return;}
@@ -528,7 +527,6 @@ document.getElementById("importFile").onchange=e=>{ const f=e.target.files[0]; i
     refreshUsers(); renderAll(); tab("map"); toast("設定を読み込みました"); }
     catch(err){ toast("読み込みに失敗しました"); } }; r.readAsText(f); e.target.value=""; };
 function resetAll(){
-  if(!confirm("本当に初期状態（サンプルデータ）に戻しますか？\n現在の登録内容（部屋・マットレス・履歴）はすべて消えます。\n\n押すと、念のため今の内容を自動でバックアップファイルとして保存してから初期化します。"))return;
   exportJSON();
   initData(); refreshUsers(); renderAll(); tab("map"); toast("初期状態に戻しました（直前の内容はバックアップファイルに保存済み）"); }
 
