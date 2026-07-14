@@ -2,678 +2,735 @@
 <html lang="ja">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>マットレス管理</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<title>ベッドマップ</title>
 <style>
-  :root{
-    --indigo:#e8d000; --indigo-d:#c4ae00;
-    --air-bg:#fffacc; --air-bd:#d4bc00; --air-tx:#6b5c00;
-    --nrm-bg:#d8f0dd; --nrm-bd:#6cc183; --nrm-tx:#256b3c;
-    --adv-bg:#ece2fb; --adv-bd:#a385e0; --adv-tx:#5a3494;
-    --osc-bg:#d8f3f3; --osc-bd:#52b8b8; --osc-tx:#176363;
-    --nor-bg:#fdf0f5; --nor-bd:#e899b8; --nor-tx:#8f1a50;
-    --rep-bg:#fbe3c5; --rep-bd:#e09a3e; --rep-tx:#8f5410;
-    --empty-bd:#d6dde6; --ink:#2b3440; --muted:#8a96a4; --line:#e4e9f0; --bg:#fefce8;
-    --font:'Hiragino Kaku Gothic ProN','Yu Gothic Medium','Meiryo',system-ui,sans-serif;
-  }
-  *{box-sizing:border-box}
-  button{font-family:inherit;cursor:pointer;border:none;background:none}
-  html,body{margin:0;height:100%}
-  body{background:var(--bg);color:var(--ink);font-family:var(--font);font-size:14px;display:flex;flex-direction:column;overflow:hidden}
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:rgba(0,0,0,0)}
+body{font-family:'Hiragino Kaku Gothic ProN','Meiryo',sans-serif;background:#FFFDE7;color:#4E342E;padding:.6rem}
 
-  .top{background:var(--indigo);color:#333;padding:10px 18px;display:flex;align-items:center;gap:12px;flex:none}
-  .top h1{font-size:17px;margin:0;font-weight:700;display:flex;align-items:center;gap:8px}
-  .top .sp{flex:1}
-  .top .user{background:rgba(255,255,255,.16);border-radius:8px;padding:5px 9px;font-size:13px}
-  .top .user select{background:transparent;border:none;color:#fff;font-family:inherit;font-size:13px}
-  .top .user select option{color:#000}
-  .add{background:rgba(255,255,255,.18);color:#fff;font-weight:700;padding:7px 13px;border-radius:8px;font-size:13px}
-  .add:hover{background:rgba(255,255,255,.3)}
+.topbar{display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;flex-wrap:wrap;gap:6px}
+.page-title{font-size:15px;font-weight:700;color:#5D4037}
+.stats{display:flex;gap:5px;flex-wrap:wrap}
+.stat{background:#FFF9C4;border:1.5px solid #F9E44A;border-radius:9px;padding:4px 11px;text-align:center}
+.stat-label{font-size:10px;color:#8D6E63;font-weight:500}
+.stat-val{font-size:16px;font-weight:700;color:#4E342E}
+.stat-val.blue{color:#1565C0}
+.stat-val.red{color:#C62828}
 
-  .tabs{background:#fff;display:flex;gap:3px;border-bottom:1px solid var(--line);padding:7px 12px 0;flex:none}
-  .tab{position:relative;padding:9px 17px;font-size:14px;color:var(--muted);font-weight:600;border-radius:9px 9px 0 0;transition:background .15s,color .15s}
-  .tab:hover{color:var(--indigo);background:var(--air-bg)}
-  .tab.on{color:var(--indigo)}
-  .tab.on::after{content:"";position:absolute;left:14px;right:14px;bottom:-1px;height:3px;border-radius:3px 3px 0 0;background:var(--indigo)}
+/* タブ */
+.tabs{display:flex;gap:4px;margin-bottom:10px;border-bottom:2px solid #F0D060;padding-bottom:0}
+.tab-btn{padding:7px 16px;font-size:13px;font-weight:700;border:none;background:none;color:#A1887F;font-family:inherit;cursor:pointer;border-radius:8px 8px 0 0;border-bottom:3px solid transparent;margin-bottom:-2px}
+.tab-btn.active{color:#5D4037;background:#FFF9C4;border-bottom:3px solid #F9A825}
 
-  .legend{display:flex;gap:16px;align-items:center;padding:7px 18px;background:#fff;border-bottom:1px solid var(--line);font-size:12px;color:#55606e;flex-wrap:wrap;flex:none}
-  .legend i{display:inline-block;width:12px;height:12px;border-radius:3px;margin-right:5px;vertical-align:-2px}
-  .note{font-size:11px;color:var(--muted);margin-left:auto}
+/* ページ */
+.page{display:none}
+.page.active{display:block}
 
-  .body{flex:1;min-height:0;position:relative}
-  .view{display:none;height:100%} .view.on{display:block}
-  .scroll{height:100%;overflow:auto;padding:16px}
+/* ベッドマップ */
+.map-outer{background:#FFFDE7;border-radius:12px;border:2px solid #F9E44A;padding:8px;margin-bottom:8px}
+.ward-row{display:flex;gap:4px;overflow-x:auto;padding-bottom:4px;align-items:flex-start}
+.ward-row::-webkit-scrollbar{height:4px}
+.ward-row::-webkit-scrollbar-thumb{background:#F9E44A;border-radius:2px}
+.room-block{border-radius:8px;border:1.5px solid #F0D060;background:#FFFEF5;padding:4px;display:flex;flex-direction:column;align-items:center;flex-shrink:0}
+.room-num{font-size:10px;font-weight:700;color:#8D6E63;margin-bottom:3px;text-align:center;white-space:nowrap}
+.bed-grid{display:grid;gap:3px}
+.bed-slot{border-radius:6px;border:2px dashed #E0C040;background:#FFFEF5;width:62px;height:62px;display:flex;align-items:center;justify-content:center;position:relative;flex-shrink:0;overflow:hidden}
+.bed-slot.target-mode{border:2.5px solid #64B5F6;background:#E3F2FD}
+.bed-num-label{position:absolute;top:2px;left:3px;font-size:8px;color:#BCAAA4;line-height:1;pointer-events:none;font-weight:600}
+.bed-inner{display:flex;align-items:center;justify-content:center;width:100%;height:100%}
+.bed-empty{font-size:10px;color:#D4B896;font-weight:600}
+.mat-chip{border-radius:7px;border:2.5px solid transparent;font-size:10px;font-weight:700;padding:3px 4px;text-align:center;width:55px;line-height:1.35;display:flex;flex-direction:column;align-items:center;box-shadow:0 1px 4px rgba(0,0,0,.12)}
+.mat-chip.selected{outline:3px solid #1565C0;outline-offset:2px;transform:scale(1.08)}
+.mat-chip.free{background:#F5F5F5!important;border-color:#E0E0E0!important;color:#9E9E9E!important;box-shadow:none!important}
+.mat-chip .chip-num{font-size:11px;font-weight:800}
+.mat-chip .chip-name{font-size:8px;opacity:.85;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:51px;margin-top:1px}
+.mat-chip .chip-since{font-size:8px;opacity:.75;white-space:nowrap;margin-top:1px}
+.ns-row{display:flex;justify-content:center;margin:5px 0}
+.ns-block{background:#FFF9C4;border:1.5px solid #F9E44A;border-radius:8px;padding:5px 18px;font-size:11px;font-weight:700;color:#8D6E63}
+.bottom-zones{display:flex;gap:7px;margin-top:7px;flex-wrap:wrap;align-items:flex-start}
+.zone-box{border-radius:10px;padding:7px;display:flex;flex-direction:column}
+.zone-box.warehouse{background:#FFFEF5;border:2px dashed #E0C040;flex:1;min-width:150px}
+.zone-box.repair-zone{background:#FFF0F0;border:2px dashed #FFAB91;width:190px;flex-shrink:0}
+.zone-box.target-mode.warehouse{border:2.5px solid #AED581;background:#F1F8E9}
+.zone-box.target-mode.repair-zone{border:2.5px solid #FF8A65;background:#FFE0B2}
+.zone-box-label{font-size:11px;font-weight:700;color:#8D6E63;margin-bottom:4px;pointer-events:none}
+.zone-box.repair-zone .zone-box-label{color:#BF360C}
+.zone-tokens{display:flex;flex-wrap:wrap;gap:4px;min-height:30px}
+.wh-footer{display:flex;align-items:center;justify-content:space-between;margin-top:6px;padding-top:5px;border-top:1.5px solid #F0D060;flex-wrap:wrap;gap:4px}
+.wh-total{font-size:11px;color:#8D6E63;font-weight:500}
 
-  /* MAP: free placement + fit-to-screen */
-  #map{position:relative}
-  .maptools{position:absolute;top:8px;right:14px;z-index:12;display:flex;gap:10px;align-items:center}
-  .mtbtn{background:#fff;border:1px solid var(--air-bd);color:var(--indigo);font-weight:700;padding:6px 12px;border-radius:8px;font-size:12.5px;box-shadow:0 1px 3px rgba(30,50,80,.12)}
-  .mtbtn:hover{background:var(--air-bg)}
-  .mthint{font-size:12px;color:var(--muted);background:#fff;padding:4px 8px;border-radius:7px;box-shadow:0 1px 3px rgba(30,50,80,.08)}
-  #mapWrap{position:relative;height:100%;overflow:hidden;padding:8px}
-  .canvas{position:absolute;left:50%;top:50%;transform-origin:center center;transform:translate(-50%,-50%)}
-  .tile{position:absolute}
-  .room{background:#fff;border:1px solid var(--line);border-radius:10px;padding:5px;display:flex;flex-direction:column}
-  .room .rname{text-align:center;font-size:11.5px;font-weight:700;color:#3a4654;padding:2px 0 4px;white-space:nowrap}
-  .beds{display:grid;gap:4px}
-  .bed{background:#fbfcfe;border:1.5px dashed var(--empty-bd);border-radius:7px;min-width:56px;height:48px;
-       display:flex;flex-direction:column;align-items:center;justify-content:center;position:relative;transition:.12s;touch-action:manipulation}
-  .bed .bn{position:absolute;top:2px;left:5px;font-size:10px;color:#aeb8c4}
-  .bed.empty.drop-ok{border-color:var(--indigo);background:#fefbd0}
-  .bed .dash{color:#c2cad4;font-size:15px;margin-top:5px}
-  .chip{margin-top:7px;border-radius:6px;padding:4px 3px;width:46px;text-align:center;font-weight:700;font-size:12.5px;
-        border:1.5px solid;cursor:grab;user-select:none;-webkit-user-select:none;-webkit-touch-callout:none;-webkit-user-drag:element;line-height:1.1;touch-action:manipulation}
-  .chip small{display:block;font-size:9px;font-weight:600;opacity:.8}
-  .chip.mu{background:var(--air-bg);border-color:var(--air-bd);color:var(--air-tx)}
-  .chip.st{background:var(--nrm-bg);border-color:var(--nrm-bd);color:var(--nrm-tx)}
-  .chip.ad{background:var(--adv-bg);border-color:var(--adv-bd);color:var(--adv-tx)}
-  .chip.os{background:var(--osc-bg);border-color:var(--osc-bd);color:var(--osc-tx)}
-  .chip.nor{background:var(--nor-bg);border-color:var(--nor-bd);color:var(--nor-tx)}
-  .chip.repair{background:var(--rep-bg);border-color:var(--rep-bd);color:var(--rep-tx)}
-  .chip.loan{background:#eef1f5;border-color:#9aa6b3;color:#3f4a57}
-  .loan-warn{display:block;margin-top:2px;font-size:9px;font-weight:700;color:#c0392b;background:#fde3e1;border-radius:4px;padding:1px 3px}
-  .chip.sel{box-shadow:0 0 0 3px #ffd27a;cursor:grabbing}
+/* 種類パネル */
+.type-panel{background:#FFFEF5;border-radius:12px;border:1.5px solid #F0D060;padding:8px;margin-bottom:8px}
+.type-panel-title{font-size:12px;font-weight:700;color:#8D6E63;margin-bottom:7px}
+.type-rows{display:flex;flex-direction:column;gap:6px}
+.type-row{display:flex;align-items:center;gap:8px}
+.type-badge{border-radius:6px;border:2px solid transparent;font-size:11px;font-weight:700;padding:3px 10px;min-width:80px;text-align:center}
+.type-count{font-size:13px;font-weight:700;color:#4E342E;min-width:24px;text-align:center}
+.type-label{font-size:12px;color:#8D6E63;flex:1}
+.tbtn{height:30px;width:30px;border-radius:7px;font-size:16px;font-weight:700;border:none;font-family:inherit;cursor:pointer;display:flex;align-items:center;justify-content:center}
+.tbtn.minus{color:#BF360C;background:#FFE0B2}
+.tbtn.plus{color:#1565C0;background:#BBDEFB}
 
-  .ns{background:var(--indigo);color:#333;border-radius:10px;display:flex;align-items:center;justify-content:center;
-      font-weight:700;letter-spacing:.03em;width:118px;height:44px;padding:6px 16px;text-align:center;line-height:1.3;position:absolute}
-  .ns-handle{position:absolute;right:4px;bottom:4px;width:28px;height:28px;cursor:nwse-resize;display:none;touch-action:none;z-index:5}
-  .ns-handle::after{content:"";position:absolute;right:6px;bottom:6px;width:12px;height:12px;
-      border-right:3px solid rgba(255,255,255,.9);border-bottom:3px solid rgba(255,255,255,.9);border-radius:0 0 3px 0}
-  .canvas.edit .ns-handle{display:block}
-  .zone{background:#fff;border:1px solid var(--line);border-radius:11px;padding:8px 10px;display:flex;flex-direction:column;gap:6px;width:166px}
-  .zone h3{margin:0;font-size:12px;color:#3a4654;display:flex;align-items:center;gap:5px}
-  .tray{display:flex;flex-wrap:wrap;gap:6px;min-height:42px;align-content:flex-start;
-        border:1.5px dashed var(--empty-bd);border-radius:7px;padding:6px;transition:.12s;touch-action:manipulation}
-  .tray.drop-ok{border-color:var(--indigo);background:#fefbd0}
-  .tray .chip{margin-top:0}
-  /* arrange (edit) mode */
-  .canvas.edit .tile{cursor:grab;touch-action:none}
-  .canvas.edit .tile.dragging{cursor:grabbing;opacity:.85;box-shadow:0 6px 16px rgba(30,50,80,.25)!important}
-  .canvas.edit .room,.canvas.edit .ns,.canvas.edit .zone{box-shadow:0 0 0 2px #ffce6a}
-  .canvas.edit .bed,.canvas.edit .chip,.canvas.edit .tray{pointer-events:none}
-  #guideLayer{position:absolute;left:0;top:0;width:100%;height:100%;pointer-events:none;z-index:60}
-  .gline{position:absolute;background:#ff4d7a}
-  .gline.v{width:1px}
-  .gline.h{height:1px}
+/* ヒントバー（選択中のみ表示） */
+.hint-bar{background:#E3F2FD;border:1px solid #90CAF9;border-radius:8px;padding:6px 10px;font-size:12px;color:#1565C0;margin-bottom:8px;text-align:center;font-weight:700;display:none}
+.hint-bar.show{display:block}
 
-  .hintbar{position:fixed;left:50%;bottom:16px;transform:translateX(-50%);background:#2b3440;color:#fff;
-           padding:8px 14px;border-radius:999px;font-size:12.5px;display:none;align-items:center;gap:10px;z-index:40}
-  .hintbar.show{display:flex}
-  .hintbar button{background:rgba(255,255,255,.18);color:#fff;border-radius:7px;padding:5px 9px;font-size:12px}
-  .hintbar button:hover{background:rgba(255,255,255,.32)}
+/* スタッフページ */
+.staff-panel{background:#FFFEF5;border-radius:12px;border:1.5px solid #F0D060;padding:12px;margin-bottom:8px}
+.staff-panel h2{font-size:13px;font-weight:700;color:#8D6E63;margin-bottom:10px}
+.staff-list{display:flex;flex-direction:column;gap:6px;margin-bottom:12px}
+.staff-item{display:flex;align-items:center;gap:8px}
+.staff-item input{flex:1;padding:7px 10px;border-radius:8px;border:1.5px solid #F0D060;background:#FFFEF5;color:#4E342E;font-size:14px;font-family:inherit;outline:none}
+.staff-del{height:32px;width:32px;border-radius:7px;border:none;background:#FFE0B2;color:#BF360C;font-size:16px;font-weight:700;cursor:pointer;font-family:inherit;flex-shrink:0}
+.staff-add-row{display:flex;gap:8px;margin-top:4px}
+.staff-add-row input{flex:1;padding:7px 10px;border-radius:8px;border:1.5px solid #F0D060;background:#FFFEF5;color:#4E342E;font-size:14px;font-family:inherit;outline:none}
+.add-btn{height:36px;padding:0 16px;border-radius:8px;border:none;background:#BBDEFB;color:#1565C0;font-size:13px;font-weight:700;font-family:inherit;cursor:pointer;white-space:nowrap}
 
-  table{width:100%;border-collapse:collapse;background:#fff;border-radius:10px;overflow:hidden;box-shadow:0 1px 3px rgba(30,50,80,.05)}
-  th,td{text-align:left;padding:9px 11px;font-size:13px;border-bottom:1px solid var(--line)}
-  th{background:#f5f8fc;color:#55606e;font-weight:700}
-  tr:last-child td{border-bottom:none}
-  .pill{font-size:11px;font-weight:700;padding:2px 9px;border-radius:999px}
-  .p-mu{background:var(--air-bg);color:var(--air-tx)} .p-st{background:var(--nrm-bg);color:var(--nrm-tx)}
-  .p-ad{background:var(--adv-bg);color:var(--adv-tx)} .p-os{background:var(--osc-bg);color:var(--osc-tx)}
-  .p-nor{background:var(--nor-bg);color:var(--nor-tx)}
-  .p-loc{background:#eef2f7;color:#55606e}
-  td input,td select{padding:6px 8px;border:1px solid var(--line);border-radius:7px;font-family:inherit;font-size:13px;background:#fff;width:100%}
-  td input[type=number]{width:74px}
-  .iconbtn{color:#c0492f;font-weight:700;padding:4px 9px;border:1px solid #e7c3bb;border-radius:7px;font-size:12px}
-  .iconbtn:hover{background:#fbe9e6}
-  .mini{font-size:12px;color:var(--indigo);font-weight:700;padding:4px 8px;border:1px solid var(--air-bd);border-radius:7px}
-  .mini:hover{background:var(--air-bg)}
-  .btn{background:var(--indigo);color:#333;font-weight:700;padding:8px 14px;border-radius:8px;font-size:13px}
-  .btn:hover{background:var(--indigo-d)}
-  .btn.ghost{background:#fff;color:var(--indigo);border:1px solid var(--air-bd)}
-  .toolbar{display:flex;gap:10px;margin-bottom:12px;align-items:center;flex-wrap:wrap}
-  .toolbar input,.toolbar select{padding:8px 10px;border:1px solid var(--line);border-radius:8px;font-family:inherit;font-size:13px;background:#fff}
-  .acard{background:#fff;border-radius:12px;padding:16px;box-shadow:0 1px 3px rgba(30,50,80,.05);margin-bottom:16px;max-width:880px}
-  .acard h2{font-size:15px;margin:0 0 12px;color:#2b3440}
-  .addrow{display:flex;gap:8px;align-items:center;margin-top:10px;flex-wrap:wrap}
-  .addrow input,.addrow select{padding:8px 10px;border:1px solid var(--line);border-radius:8px;font-family:inherit;font-size:13px}
+/* 出力ページ */
+.export-panel{background:#FFFEF5;border-radius:12px;border:1.5px solid #F0D060;padding:12px;margin-bottom:8px}
+.export-panel h2{font-size:13px;font-weight:700;color:#8D6E63;margin-bottom:6px}
+.export-panel p{font-size:12px;color:#A1887F;margin-bottom:12px;line-height:1.6}
+.export-btn{width:100%;padding:14px;border-radius:10px;border:none;background:#E8F5E9;color:#2E7D32;font-size:15px;font-weight:700;font-family:inherit;cursor:pointer;margin-bottom:8px}
+.export-btn:active{opacity:.8}
 
-  .stats{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:14px}
-  @media(max-width:680px){.stats{grid-template-columns:repeat(2,1fr)}}
-  .stat{background:#fff;border-radius:12px;padding:15px;box-shadow:0 1px 3px rgba(30,50,80,.05)}
-  .stat .n{font-size:25px;font-weight:800}.stat .l{font-size:12px;color:var(--muted);margin-top:3px;font-weight:600}
+/* 履歴テーブル（ページ1用） */
+.history-panel{background:#FFFEF5;border-radius:12px;border:1.5px solid #F0D060;padding:8px}
+.hist-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:5px;flex-wrap:wrap;gap:4px}
+.hist-title{font-size:13px;font-weight:700;color:#8D6E63}
+.hist-filter{font-size:11px;color:#A1887F;display:flex;align-items:center;gap:5px;flex-wrap:wrap}
+.hist-filter select{font-size:12px;padding:3px 6px;border-radius:6px;border:1px solid #F0D060;background:#FFFEF5;color:#4E342E;font-family:inherit}
+.hist-table{width:100%;border-collapse:collapse;font-size:11px;table-layout:fixed}
+.hist-table th{text-align:left;font-weight:700;color:#8D6E63;padding:4px 5px;border-bottom:2px solid #F0D060;background:#FFF9C4;font-size:10px}
+.hist-table td{padding:4px 5px;color:#4E342E;border-bottom:1px solid #FDF5C0}
 
-  .toast{position:fixed;left:50%;top:12px;transform:translateX(-50%);background:#2b3440;color:#fff;padding:9px 17px;
-         border-radius:999px;font-size:13px;opacity:0;pointer-events:none;transition:.25s;z-index:50}
-  .toast.show{opacity:1}
-  .ledger-head{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:10px}
-  .ledger-head h2{margin:0;font-size:18px}
-  .ledger-table{width:100%;border-collapse:collapse;font-size:12.5px}
-  .ledger-table th,.ledger-table td{border:1px solid #ccd3da;padding:5px 7px;text-align:left}
-  .ledger-table th{background:#eef1f5}
+.cancel-bar{display:none;position:fixed;bottom:20px;left:50%;transform:translateX(-50%);z-index:999}
+.cancel-bar.show{display:block}
+.cancel-bar button{background:#4E342E;color:#FFF9C4;border:none;border-radius:22px;padding:10px 28px;font-size:14px;font-weight:700;font-family:inherit;box-shadow:0 3px 12px rgba(0,0,0,.22)}
+.toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%) translateY(8px);background:#FFF9C4;border:1.5px solid #F9E44A;border-radius:12px;padding:7px 18px;font-size:12px;color:#5D4037;font-weight:600;opacity:0;transition:opacity .3s,transform .3s;pointer-events:none;z-index:9999;white-space:nowrap;box-shadow:0 3px 12px rgba(0,0,0,.13)}
+.toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
 
-  @media print{
-    .top,.legend,.tabs,.hintbar,.no-print{display:none !important}
-    .body{display:block !important; height:auto !important}
-    .view{display:none !important}
-    #ledger{display:block !important}
-    .scroll{overflow:visible !important; height:auto !important}
-    .ledger-table{font-size:11px}
-  }
+.modal-bg{display:none;position:fixed;inset:0;background:rgba(93,64,55,.45);z-index:1000;align-items:center;justify-content:center}
+.modal-bg.open{display:flex}
+.modal{background:#FFFDE7;border-radius:16px;border:2px solid #F9E44A;padding:1.3rem;width:320px;max-width:93vw;box-shadow:0 8px 30px rgba(0,0,0,.18)}
+.modal-title{font-size:15px;font-weight:800;color:#4E342E;margin-bottom:1rem}
+.form-row{margin-bottom:12px}
+.form-row label{font-size:12px;color:#8D6E63;display:block;margin-bottom:4px;font-weight:600}
+.form-row select{width:100%;padding:8px 10px;border-radius:8px;border:1.5px solid #F0D060;background:#FFFEF5;color:#4E342E;font-size:15px;font-family:inherit;outline:none}
+.modal-actions{display:flex;gap:8px;margin-top:14px}
+.modal-actions button{flex:1;padding:10px;border-radius:9px;font-size:14px;font-weight:700;border:none;font-family:inherit}
+.btn-cancel-modal{background:#FFF9C4;color:#5D4037;border:1.5px solid #F0D060 !important}
+.btn-danger{background:#FFE0B2;color:#BF360C}
+.warn-box{font-size:12px;color:#BF360C;background:#FFF0F0;padding:7px 9px;border-radius:7px;margin-top:6px;display:none;border:1px solid #FFAB91}
 </style>
 </head>
 <body>
 
-<div class="top">
-  <h1>🛏️ マットレス管理</h1>
-  <div class="sp"></div>
-  <span class="user">操作者：<select id="userSel"></select></span>
-  <button class="add" onclick="openAdd()">＋ 追加</button>
-</div>
-
-<div class="tabs">
-  <button class="tab on" data-v="map" onclick="tab('map')">病棟マップ</button>
-  <button class="tab" data-v="list" onclick="tab('list')">マットレス</button>
-  <button class="tab" data-v="hist" onclick="tab('hist')">変更履歴</button>
-  <button class="tab" data-v="sum" onclick="tab('sum')">集計</button>
-  <button class="tab" data-v="ledger" onclick="tab('ledger')">📋 管理簿</button>
-  <button class="tab" data-v="admin" onclick="tab('admin')">⚙ 管理</button>
-</div>
-
-<div class="legend">
-  <span><i style="background:var(--air-bg);border:1px solid var(--air-bd)"></i>ムレーズ</span>
-  <span><i style="background:var(--nrm-bg);border:1px solid var(--nrm-bd)"></i>ステージア</span>
-  <span><i style="background:var(--adv-bg);border:1px solid var(--adv-bd)"></i>アドバン</span>
-  <span><i style="background:var(--osc-bg);border:1px solid var(--osc-bd)"></i>オスカー</span>
-  <span><i style="background:var(--nor-bg);border:1px solid var(--nor-bd)"></i>ノーマル</span>
-  <span><i style="background:var(--rep-bg);border:1px solid var(--rep-bd)"></i>修理中</span>
-  <span><i style="background:#fbfcfe;border:1.5px dashed var(--empty-bd)"></i>未割り当て</span>
-  <span class="note">ドラッグ、またはタップ→移動先タップで移動。動きは「変更履歴」に自動記録。</span>
-</div>
-
-<div class="body">
-  <div id="map" class="view on">
-    <div class="maptools">
-      <span id="editHint" class="mthint" style="display:none">ドラッグで配置。他の部屋と揃うとガイド線が表示されます</span>
-      <button id="editBtn" class="mtbtn" onclick="toggleEdit()">⇄ 配置を編集</button>
-    </div>
-    <div id="mapWrap"><div class="canvas" id="canvas"></div><div id="guideLayer"></div></div>
+<div class="topbar">
+  <span class="page-title">🛏 ベッドマップ</span>
+  <div class="stats">
+    <div class="stat"><div class="stat-label">定数</div><div class="stat-val" id="cnt-total">0</div></div>
+    <div class="stat"><div class="stat-label">使用中</div><div class="stat-val blue" id="cnt-use">0</div></div>
+    <div class="stat"><div class="stat-label">空き</div><div class="stat-val" id="cnt-free">0</div></div>
+    <div class="stat"><div class="stat-label">修理中</div><div class="stat-val red" id="cnt-repair">0</div></div>
   </div>
-  <div id="list" class="view"><div class="scroll" id="listBody"></div></div>
-  <div id="hist" class="view"><div class="scroll" id="histBody"></div></div>
-  <div id="sum" class="view"><div class="scroll" id="sumBody"></div></div>
-  <div id="ledger" class="view"><div class="scroll" id="ledgerBody"></div></div>
-  <div id="admin" class="view"><div class="scroll" id="adminBody"></div></div>
 </div>
 
-<div class="hintbar" id="hintbar">
-  <span id="hintTxt"></span>
-  <button onclick="quick('store')">倉庫へ</button>
-  <button onclick="quick('repair')">修理へ</button>
-  <button onclick="quick('loan')">他部署へ貸出</button>
-  <button onclick="clearSel()">取消</button>
+<!-- タブ -->
+<div class="tabs">
+  <button class="tab-btn active" id="tab-map" onclick="switchTab('map')">🗺 マップ</button>
+  <button class="tab-btn" id="tab-staff" onclick="switchTab('staff')">👤 スタッフ</button>
+  <button class="tab-btn" id="tab-export" onclick="switchTab('export')">📊 出力</button>
 </div>
+
+<!-- ヒントバー（選択中のみ） -->
+<div class="hint-bar" id="hint-bar">② 移動先をタップ</div>
+
+<!-- ページ1: マップ -->
+<div class="page active" id="page-map">
+  <div class="map-outer">
+    <div class="ward-row" id="top-row"></div>
+    <div class="ns-row"><div class="ns-block">🏥 ナースステーション</div></div>
+    <div class="ward-row" id="bottom-row"></div>
+    <div class="bottom-zones">
+      <div class="zone-box warehouse" id="zone-warehouse">
+        <div class="zone-box-label">🗄 倉庫（空きマット）</div>
+        <div class="zone-tokens" id="wh-tokens"></div>
+        <div class="wh-footer">
+          <span class="wh-total">定数: <strong id="wh-total-num">0</strong> 台</span>
+        </div>
+      </div>
+      <div class="zone-box repair-zone" id="zone-repair">
+        <div class="zone-box-label">🔧 修理中</div>
+        <div class="zone-tokens" id="repair-tokens" style="min-height:62px;max-height:78px;overflow:hidden"></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="type-panel">
+    <div class="type-panel-title">📦 マット種類・台数管理</div>
+    <div class="type-rows" id="type-rows"></div>
+  </div>
+
+  <div class="history-panel">
+    <div class="hist-header">
+      <div class="hist-title">📋 使用履歴</div>
+      <div class="hist-filter">
+        マット: <select id="hist-filter-mat"><option value="">全て</option></select>
+        表示: <select id="hist-limit">
+          <option value="15">15件</option><option value="30">30件</option>
+          <option value="50">50件</option><option value="9999">全件</option>
+        </select>
+      </div>
+    </div>
+    <table class="hist-table">
+      <thead><tr>
+        <th style="width:17%">マット</th><th style="width:15%">ベッド</th>
+        <th style="width:14%">開始</th><th style="width:14%">終了</th>
+        <th style="width:10%">日数</th><th style="width:30%">担当</th>
+      </tr></thead>
+      <tbody id="hist-body"><tr><td colspan="6" style="padding:8px;color:#A1887F">履歴なし</td></tr></tbody>
+    </table>
+  </div>
+</div>
+
+<!-- ページ2: スタッフ -->
+<div class="page" id="page-staff">
+  <div class="staff-panel">
+    <h2>👤 スタッフ名の設定</h2>
+    <div class="staff-list" id="staff-list"></div>
+    <div class="staff-add-row">
+      <input type="text" id="new-staff-input" placeholder="スタッフ名を入力">
+      <button class="add-btn" id="add-staff-btn">＋ 追加</button>
+    </div>
+  </div>
+</div>
+
+<!-- ページ3: 出力 -->
+<div class="page" id="page-export">
+  <div class="export-panel">
+    <h2>📊 使用履歴の出力</h2>
+    <p>使用履歴をExcel（CSV形式）でダウンロードします。スマホ・iPadでも保存できます。</p>
+    <button class="export-btn" id="export-all-btn">📥 全履歴をダウンロード（CSV）</button>
+    <button class="export-btn" style="background:#FFF9C4;color:#8D6E63" id="export-month-btn">📥 今月の履歴をダウンロード（CSV）</button>
+    <button class="export-btn" style="background:#E3F2FD;color:#1565C0;margin-top:4px" id="export-text-btn">📋 テキストで表示（コピー用）</button>
+    <textarea id="export-textarea" style="display:none;width:100%;height:180px;margin-top:8px;padding:8px;border-radius:8px;border:1.5px solid #F0D060;font-size:11px;font-family:monospace;background:#FFFEF5;color:#4E342E;resize:vertical" readonly></textarea>
+  </div>
+</div>
+
 <div class="toast" id="toast"></div>
-<input type="file" id="importFile" accept=".json" style="display:none">
+<div class="cancel-bar" id="cancel-bar">
+  <button id="cancel-btn">✕ キャンセル</button>
+</div>
+
+<div class="modal-bg" id="modal-remove">
+  <div class="modal">
+    <div class="modal-title">🗑 マットを削除（欠番）</div>
+    <div class="form-row">
+      <label>削除するマットを選択</label>
+      <select id="remove-select"></select>
+    </div>
+    <div class="warn-box" id="remove-warn">⚠ 使用中または修理中です。削除すると履歴に記録されます。</div>
+    <div class="modal-actions">
+      <button class="btn-cancel-modal" id="remove-cancel">キャンセル</button>
+      <button class="btn-danger" id="remove-ok">削除する</button>
+    </div>
+  </div>
+</div>
+
+<!-- マット追加モーダル -->
+<div class="modal-bg" id="modal-add">
+  <div class="modal">
+    <div class="modal-title" id="modal-add-title">➕ マットを追加</div>
+    <div class="form-row">
+      <label>マット番号（任意で変更可）</label>
+      <input type="number" id="add-mat-id" min="1" style="width:100%;padding:8px 10px;border-radius:8px;border:1.5px solid #F0D060;background:#FFFEF5;color:#4E342E;font-size:15px;font-family:inherit;outline:none">
+    </div>
+    <div class="modal-actions">
+      <button class="btn-cancel-modal" id="add-mat-cancel">キャンセル</button>
+      <button style="flex:1;padding:10px;border-radius:9px;font-size:14px;font-weight:700;border:none;font-family:inherit;background:#BBDEFB;color:#1565C0" id="add-mat-ok">追加する</button>
+    </div>
+  </div>
+</div>
+
+<!-- 番号編集モーダル -->
+<div class="modal-bg" id="modal-edit-id">
+  <div class="modal">
+    <div class="modal-title">✏️ マット番号を変更</div>
+    <div class="form-row">
+      <label>変更するマットを選択</label>
+      <select id="edit-id-select" style="width:100%;padding:8px 10px;border-radius:8px;border:1.5px solid #F0D060;background:#FFFEF5;color:#4E342E;font-size:15px;font-family:inherit;outline:none"></select>
+    </div>
+    <div class="form-row">
+      <label>新しいマット番号</label>
+      <input type="number" id="edit-id-new" min="1" style="width:100%;padding:8px 10px;border-radius:8px;border:1.5px solid #F0D060;background:#FFFEF5;color:#4E342E;font-size:15px;font-family:inherit;outline:none">
+    </div>
+    <div class="modal-actions">
+      <button class="btn-cancel-modal" id="edit-id-cancel">キャンセル</button>
+      <button style="flex:1;padding:10px;border-radius:9px;font-size:14px;font-weight:700;border:none;font-family:inherit;background:#FFF9C4;color:#5D4037;border:1.5px solid #F0D060" id="edit-id-ok">変更する</button>
+    </div>
+  </div>
+</div>
 
 <script>
-/* ---------- mattress types ---------- */
-const TYPES=[{k:"mu",label:"ムレーズ"},{k:"st",label:"ステージア"},{k:"ad",label:"アドバン"},{k:"os",label:"オスカー"},{k:"nor",label:"ノーマル"}];
-const typeLabel=k=>(TYPES.find(t=>t.k===k)||{label:k}).label;
-const typeOptions=sel=>TYPES.map(t=>`<option value="${t.k}" ${sel===t.k?"selected":""}>${t.label}</option>`).join("");
+const SK='airmat_v9';
 
-/* ---------- data ---------- */
-let USERS, ROOMS, M, HISTORY, TILES, SEL=null, editing=false;
-const SNAP=10;
+const TYPES=[
+  {key:'os',label:'オスカー',  bg:'#E8F5E9',border:'#A5D6A7',text:'#2E7D32'},
+  {key:'ad',label:'アドバン',  bg:'#EDE7F6',border:'#CE93D8',text:'#4A148C'},
+  {key:'st',label:'ステージア',bg:'#E1F5FE',border:'#81D4FA',text:'#01579B'},
+  {key:'mu',label:'ムレーズ',  bg:'#FCE4EC',border:'#F48FB1',text:'#880E4F'},
+];
+const INIT_COUNTS={os:1,ad:2,st:6,mu:19};
+
+const TOP_ROOMS=[
+  {id:'17',beds:['17-1','17-2','17-3']},
+  {id:'16',beds:['16']},{id:'15',beds:['15']},{id:'14',beds:['14']},
+  {id:'13',beds:['13']},{id:'12',beds:['12']},{id:'11',beds:['11']},{id:'10',beds:['10']},
+  {id:'9',beds:['9-1','9-2','9-3','9-4']},
+  {id:'8',beds:['8']},{id:'7',beds:['7']},
+  {id:'6',beds:['6-1','6-2','6-3','6-4']},
+  {id:'5',beds:['5-1','5-2','5-3','5-4']},
+  {id:'4',beds:['4-1','4-2','4-3','4-4']},
+  {id:'3',beds:['3-1','3-2','3-3','3-4']},
+  {id:'2',beds:['2']}
+];
+const BOT_ROOMS=[
+  {id:'18',beds:['18-1','18-2']},
+  {id:'19',beds:['19-1','19-2','19-3']},
+  {id:'20',beds:['20']},{id:'21',beds:['21']},{id:'22',beds:['22']},{id:'23',beds:['23']},
+  {id:'R',beds:['R-2','R-3','R-4','R-5'],name:'観察室'}
+];
+
+function today(){return new Date().toISOString().slice(0,10)}
+function fmtDate(d){if(!d)return'';const[y,m,dd]=d.split('-');return m+'/'+dd}
+function daysSince(d){if(!d)return 0;return Math.round((new Date()-new Date(d))/86400000)}
+function getType(key){return TYPES.find(t=>t.key===key)||TYPES[0]}
 
 function initData(){
-  USERS=["看護師A","看護師B","看護師C","師長"];
-  ROOMS=[
-    {key:"r17",name:"17号室",band:"top",bedCount:3},
-    {key:"r16",name:"16号室",band:"top",bedCount:1},{key:"r15",name:"15号室",band:"top",bedCount:1},
-    {key:"r14",name:"14号室",band:"top",bedCount:1},{key:"r13",name:"13号室",band:"top",bedCount:1},
-    {key:"r12",name:"12号室",band:"top",bedCount:1},{key:"r11",name:"11号室",band:"top",bedCount:1},
-    {key:"r10",name:"10号室",band:"top",bedCount:1},{key:"r9",name:"9号室",band:"top",bedCount:4},
-    {key:"r8",name:"8号室",band:"top",bedCount:1},{key:"r7",name:"7号室",band:"top",bedCount:1},
-    {key:"r6",name:"6号室",band:"top",bedCount:4},{key:"r5",name:"5号室",band:"top",bedCount:4},
-    {key:"r4",name:"4号室",band:"top",bedCount:4},{key:"r3",name:"3号室",band:"top",bedCount:4},
-    {key:"r18",name:"18号室",band:"bottom",bedCount:2},{key:"r19",name:"19号室",band:"bottom",bedCount:3},
-    {key:"r20",name:"20号室",band:"bottom",bedCount:1},{key:"r21",name:"21号室",band:"bottom",bedCount:1},
-    {key:"r22",name:"22号室",band:"bottom",bedCount:1},{key:"r23",name:"23号室",band:"bottom",bedCount:1},
-    {key:"obs",name:"R室",band:"bottom",bedCount:4},
-  ];
-  M={};
-  const s=(id,type,loc)=>M[id]={id,type,loc};
-  s("ム1","mu",{k:"room",room:"obs",bed:2}); s("ム2","mu",{k:"room",room:"r23",bed:1});
-  s("ム3","mu",{k:"room",room:"obs",bed:3});
-  s("ス1","st",{k:"repair"}); s("ス2","st",{k:"room",room:"r9",bed:3});
-  s("ア1","ad",{k:"room",room:"obs",bed:4}); s("ア2","ad",{k:"room",room:"r6",bed:2});
-  s("ア3","ad",{k:"store"}); s("ア4","ad",{k:"store"});
-  s("オ1","os",{k:"room",room:"r20",bed:1}); s("オ2","os",{k:"store"}); s("オ3","os",{k:"store"});
-  HISTORY=[];
-  const base=new Date(); base.setDate(base.getDate()-7); base.setHours(9,0,0,0);
-  Object.values(M).forEach((m,i)=>HISTORY.push({ts:new Date(base.getTime()+i*60000),id:m.id,type:m.type,from:"—（初期登録）",to:locLabel(m.loc),user:"初期設定"}));
-  layoutInit();
+  const mats={};let id=1;
+  TYPES.forEach(t=>{
+    for(let i=0;i<(INIT_COUNTS[t.key]||0);i++){
+      mats[id]={id,type:t.key,location:'warehouse',since:null,staff:''};id++;
+    }
+  });
+  return{mats,history:[],nextId:id,staff:['スタッフA','スタッフB','スタッフC']};
+}
+function load(){try{const s=localStorage.getItem(SK);if(s)return JSON.parse(s);}catch(e){}return initData();}
+function save(){try{localStorage.setItem(SK,JSON.stringify(state));}catch(e){}}
+
+let state=load();
+let selectedId=null;
+
+function onTap(el,fn){
+  let moved=false;
+  el.addEventListener('touchstart',()=>{moved=false},{passive:true});
+  el.addEventListener('touchmove',()=>{moved=true},{passive:true});
+  el.addEventListener('touchend',e=>{if(!moved){e.preventDefault();fn(e);}});
+  el.addEventListener('click',fn);
 }
 
-/* initial free-placement coordinates (reproduces the original ward layout; freely re-arrangeable afterward) */
-const estW=r=>colsOf(r)===1?86:152;
-function layoutInit(){
-  const GAP=4;
-  let x=14;
-  // 上段
-  ROOMS.filter(r=>r.band==="top").forEach(r=>{ r.x=x; r.y=14; x+=estW(r)+GAP; });
-  const totalW=x+14;
-  const midY=196;
-  TILES={};
-  // NSを横長バーとして上段全体幅に合わせる
-  TILES.ns={x:14,y:midY,w:Math.max(300,totalW-28),h:44};
-  // 下段
-  const botY=midY+60;
-  x=14;
-  ROOMS.filter(r=>r.band==="bottom").forEach(r=>{ r.x=x; r.y=botY; x+=estW(r)+GAP; });
-  const botEndX=x+14;
-  // 倉庫・修理中・貸出
-  const zoneY=botY+180;
-  TILES.store={x:14,y:zoneY};
-  TILES.repair={x:200,y:zoneY};
-  TILES.loan={x:390,y:zoneY};
+// タブ切替
+function switchTab(name){
+  document.querySelectorAll('.tab-btn').forEach(b=>b.classList.remove('active'));
+  document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
+  document.getElementById('tab-'+name).classList.add('active');
+  document.getElementById('page-'+name).classList.add('active');
+  if(name==='staff') renderStaff();
 }
 
-/* ---------- helpers ---------- */
-const roomByKey=k=>ROOMS.find(r=>r.key===k);
-const colsOf=r=>r.bedCount<=1?1:2;
-const bedsOf=r=>Array.from({length:r.bedCount},(_,i)=>i+1);
-function locLabel(loc){
-  if(!loc) return "—";
-  if(loc.k==="room"){ const r=roomByKey(loc.room); return `${r?r.name:"?"} ベッド${loc.bed}`; }
-  if(loc.k==="store") return "倉庫"; if(loc.k==="repair") return "修理中";
-  if(loc.k==="loan") return `${loc.floor}階へ貸出`; return "—";
+// スタッフページ
+function renderStaff(){
+  const list=document.getElementById('staff-list');
+  list.innerHTML='';
+  (state.staff||[]).forEach((name,i)=>{
+    const row=document.createElement('div');row.className='staff-item';
+    row.innerHTML=`<input type="text" value="${name}" placeholder="スタッフ名"><button class="staff-del">✕</button>`;
+    row.querySelector('input').addEventListener('change',e=>{state.staff[i]=e.target.value.trim();save();});
+    onTap(row.querySelector('.staff-del'),()=>{state.staff.splice(i,1);save();renderStaff();});
+    list.appendChild(row);
+  });
 }
-const mattressAt=(room,bed)=>Object.values(M).find(m=>m.loc.k==="room"&&m.loc.room===room&&m.loc.bed===bed);
-const fmtTs=d=>{const p=n=>String(n).padStart(2,"0");return `${p(d.getMonth()+1)}/${p(d.getDate())} ${p(d.getHours())}:${p(d.getMinutes())}`;};
-const user=()=>document.getElementById("userSel").value;
-function logMove(id,from,to){ HISTORY.unshift({ts:new Date(),id,type:M[id].type,from,to,user:user()}); }
-
-function move(id,newLoc){
-  const m=M[id]; const from=locLabel(m.loc);
-  if(newLoc.k==="room"&&mattressAt(newLoc.room,newLoc.bed)){ toast("そのベッドは使用中です"); return false; }
-  m.loc=newLoc; logMove(id,from,locLabel(newLoc)); renderAll(); toast(`${id} を ${locLabel(newLoc)} へ移動`); return true;
-}
-
-/* ---------- selection ---------- */
-function selectChip(id){ SEL=id; renderMap(); const hb=document.getElementById("hintbar");
-  document.getElementById("hintTxt").textContent=`${id} を選択中：移動先をタップ`; hb.classList.add("show"); }
-function clearSel(){ SEL=null; document.getElementById("hintbar").classList.remove("show"); renderMap(); }
-function quick(kind){ if(!SEL) return; const id=SEL;
-  if(kind==="store") move(id,{k:"store"}); else if(kind==="repair") move(id,{k:"repair"});
-  else if(kind==="loan"){ const f=prompt("貸出先は何階ですか？（数字）"); if(f) move(id,{k:"loan",floor:String(f).trim()}); }
-  clearSel(); }
-function tryDrop(t){ if(!SEL) return; const id=SEL;
-  if(t.k==="room"){ if(move(id,{k:"room",room:t.room,bed:t.bed})) clearSel(); }
-  else if(t.k==="store"){ move(id,{k:"store"}); clearSel(); }
-  else if(t.k==="repair"){ move(id,{k:"repair"}); clearSel(); }
-  else if(t.k==="loan"){ const f=prompt("貸出先は何階ですか？（数字）"); if(f){ move(id,{k:"loan",floor:String(f).trim()}); clearSel(); } } }
-
-/* ---------- render: map ---------- */
-function lastMoveTs(id){ const h=HISTORY.find(x=>x.id===id); return h?h.ts:null; }
-function daysSince(ts){ if(!ts) return null; return Math.floor((Date.now()-ts.getTime())/86400000); }
-function chipHtml(m){ const inRepair=m.loc.k==="repair", onLoan=m.loc.k==="loan";
-  const cls=inRepair?"repair":(onLoan?"loan":m.type);
-  const lbl=inRepair?"修理中":(onLoan?`${m.loc.floor}階`:typeLabel(m.type));
-  let warn="";
-  if(onLoan){ const d=daysSince(lastMoveTs(m.id)); if(d!==null&&d>=7) warn=`<span class="loan-warn" title="貸出から${d}日経過">⚠${d}日</span>`; }
-  return `<div class="chip ${cls} ${SEL===m.id?'sel':''}" draggable="${!editing}" data-chip="${m.id}"><small>${lbl}</small>${m.id}${warn}</div>`; }
-function bedHtml(roomKey,bed){ const m=mattressAt(roomKey,bed);
-  const drop=m?'':`data-drop='${JSON.stringify({k:"room",room:roomKey,bed})}'`;
-  return `<div class="bed ${m?'':'empty'}" ${drop}><span class="bn">${bed}</span>${m?chipHtml(m):'<span class="dash">—</span>'}</div>`; }
-function roomTile(r){ const beds=bedsOf(r).map(b=>bedHtml(r.key,b)).join("");
-  return `<div class="room tile" data-tile="room:${r.key}" style="left:${r.x||0}px;top:${r.y||0}px">
-    <div class="rname">${r.name}</div>
-    <div class="beds" style="grid-template-columns:repeat(${colsOf(r)},1fr)">${beds}</div></div>`; }
-function trayHtml(kind,items){ const drop=`data-drop='${JSON.stringify({k:kind})}'`;
-  const chips=items.length?items.map(chipHtml).join(""):'<span style="color:#bcc5d0;font-size:11px">なし</span>';
-  return `<div class="tray" ${drop}>${chips}</div>`; }
-function zoneTile(kind,icon,title,items,pos){
-  return `<div class="zone tile" data-tile="${kind}" style="left:${pos.x}px;top:${pos.y}px">
-    <h3>${icon} ${title}</h3>${trayHtml(kind,items)}</div>`; }
-function renderMap(){
-  const cv=document.getElementById("canvas"); cv.classList.toggle("edit",editing);
-  const store=Object.values(M).filter(m=>m.loc.k==="store");
-  const repair=Object.values(M).filter(m=>m.loc.k==="repair");
-  const loan=Object.values(M).filter(m=>m.loc.k==="loan").sort((a,b)=>(a.loc.floor+"").localeCompare(b.loc.floor+"",'ja',{numeric:true}));
-  const parts=ROOMS.map(roomTile);
-  const nsW=TILES.ns.w||118, nsH=TILES.ns.h||70;
-  const nsFontSize=Math.max(9,Math.min(nsW,nsH)*0.16);
-  parts.push(`<div class="ns tile" data-tile="ns" style="left:${TILES.ns.x}px;top:${TILES.ns.y}px;width:${nsW}px;height:${nsH}px;font-size:${nsFontSize.toFixed(1)}px">ナース<br>ステーション<span class="ns-handle" data-ns-resize="1"></span></div>`);
-  parts.push(zoneTile("store","🗄️","倉庫",store,TILES.store));
-  parts.push(zoneTile("repair","🔧","修理中",repair,TILES.repair));
-  parts.push(zoneTile("loan","🏢","他部署へ貸出中",loan,TILES.loan));
-  cv.innerHTML=parts.join("");
-  sizeBoard(); fitMap();
-}
-function sizeBoard(){
-  const cv=document.getElementById("canvas"); let w=0,h=0;
-  Array.from(cv.children).forEach(el=>{ w=Math.max(w,el.offsetLeft+el.offsetWidth); h=Math.max(h,el.offsetTop+el.offsetHeight); });
-  cv.style.width=(w+16)+"px"; cv.style.height=(h+16)+"px";
-}
-let _fitTries=0;
-function fitMap(){
-  const wrap=document.getElementById("mapWrap"), cv=document.getElementById("canvas");
-  if(editing){ cv.style.position="static"; cv.style.left=""; cv.style.top=""; cv.style.transform="none"; return; }
-  cv.style.position="absolute"; cv.style.left="50%"; cv.style.top="50%";
-  const bw=cv.offsetWidth, bh=cv.offsetHeight;
-  const aw=wrap.clientWidth-16, ah=wrap.clientHeight-16;
-  if(aw<=0||ah<=0||bw<=0||bh<=0){ if(_fitTries++<30) requestAnimationFrame(fitMap); return; }
-  _fitTries=0;
-  const s=Math.min(aw/bw, ah/bh, 1);   // fit whole board; never enlarge beyond natural size
-  cv.style.transform=`translate(-50%,-50%) scale(${s})`;
-}
-function setTilePos(tid,x,y){
-  if(tid==="ns") TILES.ns={...TILES.ns,x,y};
-  else if(tid==="store") TILES.store={x,y};
-  else if(tid==="repair") TILES.repair={x,y};
-  else if(tid==="loan") TILES.loan={x,y};
-  else if(tid.indexOf("room:")===0){ const r=roomByKey(tid.slice(5)); if(r){ r.x=x; r.y=y; } }
-}
-function setNsSize(w,h){ TILES.ns={...TILES.ns, w:Math.max(80,w), h:Math.max(54,h)}; }
-function toggleEdit(){
-  editing=!editing; clearSel();
-  document.getElementById("mapWrap").style.overflow=editing?"auto":"hidden";
-  document.getElementById("editBtn").textContent=editing?"✓ 配置を確定":"⇄ 配置を編集";
-  document.getElementById("editHint").style.display=editing?"inline":"none";
-  renderMap();
-}
-
-/* ---------- render: list/hist/sum ---------- */
-function renderList(){
-  const q=(document.getElementById("listQ")?.value||"").trim();
-  let rows=Object.values(M); if(q) rows=rows.filter(m=>m.id.includes(q)||locLabel(m.loc).includes(q));
-  const tr=rows.map(m=>{ const off=m.loc.k==="loan"||m.loc.k==="repair";
-    return `<tr><td><b>${m.id}</b></td><td><span class="pill p-${m.type}">${typeLabel(m.type)}</span></td>
-      <td><span class="pill p-loc">${locLabel(m.loc)}</span></td>
-      <td>${off?`<button class="mini" onclick="move('${m.id}',{k:'store'})">倉庫へ戻す</button>`:''}</td></tr>`;}).join("");
-  document.getElementById("listBody").innerHTML=`<div class="toolbar"><input id="listQ" placeholder="ID・場所で検索" oninput="renderList()" value="${q}"></div>
-    <table><thead><tr><th>マットレス</th><th>種類</th><th>現在地</th><th></th></tr></thead><tbody>${tr}</tbody></table>`;
-  if(q){const el=document.getElementById("listQ");el.focus();el.setSelectionRange(q.length,q.length);}
-}
-function delHist(i){ HISTORY.splice(i,1); saveState(); renderHist(); toast("1件削除しました"); }
-function resetHist(){ HISTORY=[]; saveState(); renderHist(); toast("変更履歴をリセットしました"); }
-function renderHist(){
-  const sel=document.getElementById("histSel")?.value||"all";
-  let rows=HISTORY; if(sel!=="all") rows=rows.filter(h=>h.id===sel);
-  const opts=`<option value="all">すべてのマットレス</option>`+Object.keys(M).map(id=>`<option ${sel===id?'selected':''}>${id}</option>`).join("");
-  const tr=rows.map((h,i)=>{
-    const realIdx=HISTORY.indexOf(h);
-    return `<tr><td style="white-space:nowrap;color:#55606e">${fmtTs(h.ts)}</td>
-      <td><b>${h.id}</b> <span class="pill p-${h.type}">${typeLabel(h.type)}</span></td>
-      <td style="color:#8a96a4">${h.from}</td><td>→ ${h.to}</td><td style="color:#55606e">${h.user}</td>
-      <td><button class="iconbtn" onclick="delHist(${realIdx})">削除</button></td></tr>`;
-  }).join("");
-  document.getElementById("histBody").innerHTML=`<div class="toolbar">
-      表示：<select id="histSel" onchange="renderHist()">${opts}</select>
-      <span style="color:#8a96a4;font-size:12px">対象を選ぶと「いつ・どこにあったか」をさかのぼれます。</span>
-      <button class="btn" style="margin-left:auto;background:#e8d000;color:#333;font-size:12px;padding:5px 10px" onclick="resetHist()">🗑 履歴を全件リセット</button></div>
-    <table><thead><tr><th>日時</th><th>マットレス</th><th>移動前</th><th>移動後</th><th>操作者</th><th></th></tr></thead>
-    <tbody>${tr||'<tr><td colspan="6" style="color:#8a96a4">履歴なし</td></tr>'}</tbody></table>`;
-}
-function renderSum(){
-  const all=Object.values(M); const c=f=>all.filter(f).length;
-  const beds=ROOMS.reduce((a,r)=>a+r.bedCount,0);
-  const st=(n,l)=>`<div class="stat"><div class="n">${n}</div><div class="l">${l}</div></div>`;
-  document.getElementById("sumBody").innerHTML=`
-    <div class="stats">${st(all.length,"総台数")}${TYPES.map(t=>st(c(m=>m.type===t.k),t.label)).join("")}${st(c(m=>m.loc.k==="room"),"使用中（病室）")}</div>
-    <div class="stats">${st(c(m=>m.loc.k==="store"),"倉庫（未使用）")}${st(c(m=>m.loc.k==="loan"),"他部署へ貸出")}${st(c(m=>m.loc.k==="repair"),"修理中")}${st(beds-c(m=>m.loc.k==="room"),"空きベッド")}</div>`;
-}
-
-/* ---------- render: 管理簿（印刷用） ---------- */
-function renderLedger(){
-  const rows=Object.values(M).sort((a,b)=>a.id.localeCompare(b.id,'ja'));
-  const today=new Date(); const p=n=>String(n).padStart(2,"0");
-  const dateStr=`${today.getFullYear()}年${p(today.getMonth()+1)}月${p(today.getDate())}日`;
-  const tr=rows.map((m,i)=>{
-    const last=HISTORY.find(h=>h.id===m.id);
-    const d=last?daysSince(last.ts):null;
-    const stayTxt=d===null?"—":(d===0?"本日":`${d}日`);
-    const moveTxt=last?`${fmtTs(last.ts)}　${last.from} → ${last.to}（${last.user}）`:"—（履歴なし）";
-    const warn=(m.loc.k==="loan"||m.loc.k==="repair")&&d!==null&&d>=7?' style="background:#fdeceb"':"";
-    return `<tr${warn}><td>${i+1}</td><td><b>${m.id}</b></td><td>${typeLabel(m.type)}</td>
-      <td>${locLabel(m.loc)}</td><td style="text-align:center">${stayTxt}</td>
-      <td style="color:#55606e;font-size:12px">${moveTxt}</td><td style="width:70px"></td></tr>`;
-  }).join("");
-  document.getElementById("ledgerBody").innerHTML=`
-    <div class="toolbar no-print">
-      <button class="btn" onclick="window.print()">🖨 印刷する</button>
-      <button class="btn" style="background:#e8d000;color:#333;font-size:12px;padding:5px 10px" onclick="resetHist(); renderLedger()">🗑 履歴をリセット</button>
-      <span style="color:#8a96a4;font-size:12px">印刷ダイアログでは「PDFに保存」も選べます（iPadもOK）。</span></div>
-    <div id="printArea">
-      <div class="ledger-head"><h2>マットレス管理簿</h2><div>作成日：${dateStr}　/　総台数：${rows.length}台</div></div>
-      <table class="ledger-table"><thead><tr><th>No</th><th>ID</th><th>種別</th><th>現在の場所</th><th>滞在日数</th><th>直近の移動履歴</th><th>確認者印</th></tr></thead>
-      <tbody>${tr}</tbody></table>
-    </div>`;
-}
-
-/* ---------- render: admin ---------- */
-function renderAdmin(){
-  const staff=USERS.map((u,i)=>`<tr><td><input value="${u}" onchange="renStaff(${i},this.value)"></td>
-     <td style="width:90px"><button class="iconbtn" onclick="delStaff(${i})">削除</button></td></tr>`).join("");
-  const rooms=ROOMS.map(r=>`<tr>
-     <td><input value="${r.name}" onchange="editRoom('${r.key}','name',this.value)"></td>
-     <td><input type="number" min="1" max="8" value="${r.bedCount}" onchange="editRoom('${r.key}','bedCount',this.value)"></td>
-     <td style="width:90px"><button class="iconbtn" onclick="delRoom('${r.key}')">削除</button></td></tr>`).join("");
-  const mats=Object.values(M).map(m=>`<tr>
-     <td><input value="${m.id}" onchange="editMat('${m.id}','id',this.value)" style="width:90px"></td>
-     <td><select onchange="editMat('${m.id}','type',this.value)">${typeOptions(m.type)}</select></td>
-     <td><span class="pill p-loc">${locLabel(m.loc)}</span></td>
-     <td style="width:90px"><button class="iconbtn" onclick="delMat('${m.id}')">削除</button></td></tr>`).join("");
-  document.getElementById("adminBody").innerHTML=`
-    <div class="acard"><h2>職員</h2>
-      <table><thead><tr><th>氏名</th><th></th></tr></thead><tbody>${staff}</tbody></table>
-      <div class="addrow"><input id="newStaff" placeholder="氏名を入力"><button class="btn" onclick="addStaff()">＋ 職員を追加</button></div></div>
-
-    <div class="acard"><h2>部屋</h2>
-      <table><thead><tr><th>部屋名</th><th>病床数</th><th></th></tr></thead><tbody>${rooms}</tbody></table>
-      <div class="addrow"><input id="newRoomName" placeholder="部屋名（例：24号室）">
-        <input id="newRoomBeds" type="number" min="1" max="8" value="1" style="width:74px">病床
-        <button class="btn" onclick="addRoom()">＋ 部屋を追加</button></div>
-      <div style="font-size:12px;color:var(--muted);margin-top:8px">追加した部屋やマップ上の位置は、「病棟マップ」タブの「⇄ 配置を編集」でドラッグして自由に並べ替えられます。</div></div>
-
-    <div class="acard"><h2>マットレス</h2>
-      <table><thead><tr><th>ID</th><th>種類</th><th>現在地</th><th></th></tr></thead><tbody>${mats}</tbody></table>
-      <div class="addrow"><input id="newMatId" placeholder="ID（例：エ6, 普8）" style="width:130px">
-        <select id="newMatType">${typeOptions(TYPES[0].k)}</select>
-        <button class="btn" onclick="addMat()">＋ マットレスを追加（倉庫へ）</button></div></div>
-
-    <div class="acard"><h2>データ</h2>
-      <div class="addrow">
-        <button class="btn ghost" onclick="exportJSON()">設定をファイルに保存</button>
-        <button class="btn ghost" onclick="document.getElementById('importFile').click()">設定を読み込み</button>
-        <button class="btn ghost" onclick="resetAll()" style="color:#c0492f;border-color:#e7c3bb">初期状態に戻す</button>
-      </div>
-      <div style="font-size:12px;color:var(--muted);margin-top:8px">操作内容はこのiPad（このブラウザ）の中に自動で保存され、次に開いたときもそのまま続きが表示されます。<b>このiPad以外にデータの控えはありません</b>。端末の初期化やデータ消去で万一消えることに備えて、定期的に「設定をファイルに保存」でバックアップを取っておいてください（保存したJSONファイルはメールやSharePointに置いておけます）。「初期状態に戻す」は本番データもすべて消えるため、普段は使わないでください。</div></div>`;
-}
-
-/* ---------- auto-save (iPad: data lives on-device, no file open/save dialogs) ---------- */
-const LS_KEY="mattressAppData_v1";
-function saveState(){ try{
-    localStorage.setItem(LS_KEY, JSON.stringify({users:USERS,rooms:ROOMS,tiles:TILES,mattresses:M,history:HISTORY}));
-  }catch(e){ /* storage unavailable/full — manual JSON backup still available */ } }
-function loadState(){ try{
-    const raw=localStorage.getItem(LS_KEY); if(!raw) return false;
-    const d=JSON.parse(raw); if(!d||!d.rooms||!d.mattresses) return false;
-    USERS=d.users; ROOMS=d.rooms; M=d.mattresses;
-    HISTORY=(d.history||[]).map(h=>({...h,ts:new Date(h.ts)}));
-    TILES=d.tiles;
-    if(!TILES || ROOMS.some(x=>typeof x.x!=="number")) layoutInit();
-    else if(!TILES.loan) TILES.loan={x:TILES.store.x+200,y:TILES.store.y};
-    return true;
-  }catch(e){ return false; } }
-
-/* ---------- admin actions ---------- */
-function refreshUsers(){ const cur=user(); document.getElementById("userSel").innerHTML=USERS.map(u=>`<option ${u===cur?'selected':''}>${u}</option>`).join(""); }
-function addStaff(){ const v=document.getElementById("newStaff").value.trim(); if(!v) return; if(USERS.includes(v)){toast("同じ氏名があります");return;} USERS.push(v); refreshUsers(); renderAdmin(); saveState(); toast("職員を追加"); }
-function delStaff(i){ if(USERS.length<=1){toast("最低1人は必要です");return;} const name=USERS[i]; USERS.splice(i,1); refreshUsers(); renderAdmin(); saveState(); toast(`${name} を削除しました`); }
-function renStaff(i,v){ v=v.trim(); if(!v){renderAdmin();return;} USERS[i]=v; refreshUsers(); saveState(); }
-
-function addRoom(){ const name=document.getElementById("newRoomName").value.trim(); if(!name){toast("部屋名を入力");return;}
-  const bc=Math.max(1,parseInt(document.getElementById("newRoomBeds").value)||1);
-  ROOMS.push({key:"k"+Date.now().toString(36),name,band:"bottom",bedCount:bc,x:14,y:480}); renderAll(); toast(`${name} を追加（マップ左下）。配置編集で移動できます`); }
-function delRoom(key){ const r=roomByKey(key); const inside=Object.values(M).filter(m=>m.loc.k==="room"&&m.loc.room===key);
-  inside.forEach(m=>{ logMove(m.id,locLabel(m.loc),"倉庫"); m.loc={k:"store"}; });
-  ROOMS=ROOMS.filter(x=>x.key!==key); renderAll(); toast(`${r.name} を削除しました${inside.length?`（マットレス${inside.length}台を倉庫へ移動）`:""}`); }
-function editRoom(key,field,val){ const r=roomByKey(key); if(!r) return;
-  if(field==="name"){ val=val.trim(); if(val) r.name=val; }
-  else if(field==="bedCount"){ const n=Math.max(1,Math.min(8,parseInt(val)||1));
-    const orphan=Object.values(M).filter(m=>m.loc.k==="room"&&m.loc.room===key&&m.loc.bed>n);
-    orphan.forEach(m=>{ logMove(m.id,locLabel(m.loc),"倉庫"); m.loc={k:"store"}; });
-    r.bedCount=n; if(orphan.length) toast(`病床を減らしたため${orphan.length}台を倉庫へ`); }
-  renderAll(); }
-
-function addMat(){ const id=document.getElementById("newMatId").value.trim(); if(!id){toast("IDを入力");return;} if(M[id]){toast("そのIDは既にあります");return;}
-  const type=document.getElementById("newMatType").value; M[id]={id,type,loc:{k:"store"}}; logMove(id,"—（新規追加）","倉庫"); renderAll(); toast(`${id} を倉庫に追加`); }
-function delMat(id){ logMove(id,locLabel(M[id].loc),"—（削除）"); delete M[id]; renderAll(); toast(`${id} を削除しました`); }
-function editMat(id,field,val){ const m=M[id]; if(!m) return;
-  if(field==="type"){ m.type=val; }
-  else if(field==="id"){ val=val.trim(); if(!val||val===id){renderAll();return;} if(M[val]){toast("そのIDは既にあります");renderAll();return;}
-    M[val]={...m,id:val}; delete M[id]; }
-  renderAll(); }
-
-/* ---------- data io ---------- */
-function exportJSON(){ const data={users:USERS,rooms:ROOMS,tiles:TILES,mattresses:M,history:HISTORY};
-  const a=document.createElement("a"); a.href=URL.createObjectURL(new Blob([JSON.stringify(data,null,2)],{type:"application/json"}));
-  a.download="マットレス管理_設定.json"; a.click(); toast("設定を保存しました"); }
-document.getElementById("importFile").onchange=e=>{ const f=e.target.files[0]; if(!f) return; const r=new FileReader();
-  r.onload=()=>{ try{ const d=JSON.parse(r.result); USERS=d.users; ROOMS=d.rooms; M=d.mattresses;
-    HISTORY=(d.history||[]).map(h=>({...h,ts:new Date(h.ts)}));
-    if(d.tiles) TILES=d.tiles;
-    if(!TILES || ROOMS.some(x=>typeof x.x!=="number")) layoutInit();
-    else if(!TILES.loan) TILES.loan={x:TILES.store.x+200,y:TILES.store.y};
-    editing=false; document.getElementById("editBtn").textContent="⇄ 配置を編集"; document.getElementById("editHint").style.display="none";
-    document.getElementById("mapWrap").style.overflow="hidden";
-    refreshUsers(); renderAll(); tab("map"); toast("設定を読み込みました"); }
-    catch(err){ toast("読み込みに失敗しました"); } }; r.readAsText(f); e.target.value=""; };
-function resetAll(){
-  exportJSON();
-  initData(); refreshUsers(); renderAll(); tab("map"); toast("初期状態に戻しました（直前の内容はバックアップファイルに保存済み）"); }
-
-/* ---------- tabs / add / events ---------- */
-function tab(v){ document.querySelectorAll(".tab").forEach(t=>t.classList.toggle("on",t.dataset.v===v));
-  document.querySelectorAll(".view").forEach(s=>s.classList.toggle("on",s.id===v));
-  if(v!=="map") clearSel(); if(v==="map") requestAnimationFrame(renderMap); }
-function openAdd(){ tab("admin"); document.getElementById("newMatId")?.focus(); }
-function renderAll(){ renderMap(); renderList(); renderHist(); renderSum(); renderLedger(); renderAdmin(); saveState(); }
-function toast(m){const t=document.getElementById("toast");t.textContent=m;t.classList.add("show");clearTimeout(t._t);t._t=setTimeout(()=>t.classList.remove("show"),1700);}
-
-const mapEl=document.getElementById("map");
-const EMPTY_IMG=new Image(); EMPTY_IMG.src="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7";
-let CHIP_GHOST=null;
-
-mapEl.addEventListener("click",e=>{
-  if(editing) return;
-  const chip=e.target.closest("[data-chip]");
-  if(chip){ const id=chip.dataset.chip; SEL===id?clearSel():selectChip(id); return; }
-  const dz=e.target.closest("[data-drop]"); if(dz&&SEL) tryDrop(JSON.parse(dz.dataset.drop));
+onTap(document.getElementById('add-staff-btn'),()=>{
+  const inp=document.getElementById('new-staff-input');
+  const v=inp.value.trim();if(!v)return;
+  if(!state.staff)state.staff=[];
+  state.staff.push(v);inp.value='';save();renderStaff();showToast(v+' を追加しました');
 });
 
-/* ns resize handle (checked first so it doesn't trigger tile move) */
-mapEl.addEventListener("pointerdown",e=>{
-  if(!editing) return;
-  const handle=e.target.closest("[data-ns-resize]");
-  if(!handle) return;
-  e.preventDefault(); e.stopPropagation();
-  try{ handle.setPointerCapture(e.pointerId); }catch(err){}
-  const tile=document.querySelector('[data-tile="ns"]');
-  const startW=tile.offsetWidth, startH=tile.offsetHeight, startX=e.clientX, startY=e.clientY;
-  function onMove(ev){
-    const w=Math.max(80,Math.round((startW+(ev.clientX-startX))/SNAP)*SNAP);
-    const h=Math.max(54,Math.round((startH+(ev.clientY-startY))/SNAP)*SNAP);
-    tile.style.width=w+"px"; tile.style.height=h+"px";
-  }
-  function onUp(ev){
-    handle.removeEventListener("pointermove",onMove);
-    handle.removeEventListener("pointerup",onUp);
-    try{ handle.releasePointerCapture(ev.pointerId); }catch(err){}
-    setNsSize(parseInt(tile.style.width), parseInt(tile.style.height));
-    renderMap(); saveState();
-  }
-  handle.addEventListener("pointermove",onMove);
-  handle.addEventListener("pointerup",onUp);
-},true);
-
-/* live tile dragging in arrange mode: PowerPoint-style smart guides (snap to edges/centers of other tiles) */
-const GUIDE_THRESH=6;
-let glV=null, glH=null;
-function guideEls(){
-  if(!glV){ glV=document.createElement("div"); glV.className="gline v"; document.getElementById("guideLayer").appendChild(glV); }
-  if(!glH){ glH=document.createElement("div"); glH.className="gline h"; document.getElementById("guideLayer").appendChild(glH); }
-  return [glV,glH];
+// 種類パネル
+function renderTypePanel(){
+  const rows=document.getElementById('type-rows');rows.innerHTML='';
+  TYPES.forEach(t=>{
+    const mats=Object.values(state.mats).filter(m=>m.type===t.key);
+    const used=mats.filter(m=>m.location!=='warehouse'&&m.location!=='repair').length;
+    const free=mats.filter(m=>m.location==='warehouse').length;
+    const rep=mats.filter(m=>m.location==='repair').length;
+    const row=document.createElement('div');row.className='type-row';
+    row.innerHTML=`
+      <div class="type-badge" style="background:${t.bg};border-color:${t.border};color:${t.text}">${t.label}</div>
+      <button class="tbtn minus">−</button>
+      <span class="type-count">${mats.length}</span>
+      <button class="tbtn plus">＋</button>
+      <span class="type-label">台（使用中:${used}/空き:${free}/修理:${rep}）</span>
+      <button style="height:26px;padding:0 8px;border-radius:6px;border:1px solid #F0D060;background:#FFF9C4;color:#8D6E63;font-size:11px;font-family:inherit;cursor:pointer;flex-shrink:0" data-edit-type="${t.key}">番号変更</button>
+    `;
+    onTap(row.querySelector('.tbtn.minus'),()=>changeTypeCount(t.key,-1));
+    onTap(row.querySelector('.tbtn.plus'),()=>openAddMatModal(t.key));
+    onTap(row.querySelector('[data-edit-type]'),()=>openEditIdModal(t.key));
+    rows.appendChild(row);
+  });
 }
-function placeGuideV(canvasLocalX){ const [v]=guideEls(); const cv=document.getElementById("canvas"), gr=document.getElementById("guideLayer").getBoundingClientRect(), cr=cv.getBoundingClientRect();
-  v.style.display="block"; v.style.left=(cr.left-gr.left+canvasLocalX)+"px"; v.style.top="0px"; v.style.height=gr.height+"px"; }
-function placeGuideH(canvasLocalY){ const [,h]=guideEls(); const cv=document.getElementById("canvas"), gr=document.getElementById("guideLayer").getBoundingClientRect(), cr=cv.getBoundingClientRect();
-  h.style.display="block"; h.style.top=(cr.top-gr.top+canvasLocalY)+"px"; h.style.left="0px"; h.style.width=gr.width+"px"; }
-function hideGuides(){ if(glV) glV.style.display="none"; if(glH) glH.style.display="none"; }
 
-mapEl.addEventListener("pointerdown",e=>{
-  if(!editing) return;
-  const t=e.target.closest("[data-tile]"); if(!t) return;
-  e.preventDefault();
-  const cv=document.getElementById("canvas");
-  const grabX=e.clientX-cv.getBoundingClientRect().left-t.offsetLeft;
-  const grabY=e.clientY-cv.getBoundingClientRect().top-t.offsetTop;
-  const others=Array.from(cv.querySelectorAll("[data-tile]")).filter(o=>o!==t);
-  t.classList.add("dragging"); t.style.zIndex=50;
-  function onMove(ev){
-    const r=cv.getBoundingClientRect();
-    let x=ev.clientX-r.left-grabX, y=ev.clientY-r.top-grabY;
-    const w=t.offsetWidth, h=t.offsetHeight;
-    // try snapping to other tiles' edges/centers (PowerPoint-style smart guides)
-    let bestDX=GUIDE_THRESH+1, bestDY=GUIDE_THRESH+1, snapXv=null, snapYv=null, guideXpos=null, guideYpos=null;
-    const myXs=[["l",x],["c",x+w/2],["r",x+w]];
-    const myYs=[["t",y],["m",y+h/2],["b",y+h]];
-    others.forEach(o=>{
-      const ox=o.offsetLeft, oy=o.offsetTop, ow=o.offsetWidth, oh=o.offsetHeight;
-      const oXs=[ox,ox+ow/2,ox+ow], oYs=[oy,oy+oh/2,oy+oh];
-      myXs.forEach(([kind,mv])=>oXs.forEach(ov=>{ const d=Math.abs(mv-ov);
-        if(d<bestDX){ bestDX=d; guideXpos=ov; snapXv=kind==="l"?ov:kind==="c"?ov-w/2:ov-w; } }));
-      myYs.forEach(([kind,mv])=>oYs.forEach(ov=>{ const d=Math.abs(mv-ov);
-        if(d<bestDY){ bestDY=d; guideYpos=ov; snapYv=kind==="t"?ov:kind==="m"?ov-h/2:ov-h; } }));
+function changeTypeCount(typeKey,delta){
+  const mats=Object.values(state.mats).filter(m=>m.type===typeKey);
+  if(delta<0){
+    if(mats.length===0){showToast(getType(typeKey).label+'のマットがありません');return;}
+    openRemoveModalForType(typeKey);
+  }
+}
+
+// 追加モーダル
+let addMatType=null;
+function openAddMatModal(typeKey){
+  addMatType=typeKey;
+  const t=getType(typeKey);
+  document.getElementById('modal-add-title').textContent='➕ '+t.label+' を追加';
+  // 次の空き番号を提案
+  const usedIds=Object.keys(state.mats).map(Number);
+  let next=state.nextId||1;
+  while(usedIds.includes(next))next++;
+  document.getElementById('add-mat-id').value=next;
+  document.getElementById('modal-add').classList.add('open');
+}
+onTap(document.getElementById('add-mat-cancel'),()=>document.getElementById('modal-add').classList.remove('open'));
+onTap(document.getElementById('add-mat-ok'),()=>{
+  const rawId=document.getElementById('add-mat-id').value.trim();
+  const id=parseInt(rawId);
+  if(!id||isNaN(id)||id<1){showToast('番号を入力してください');return;}
+  if(state.mats[id]){showToast('#'+String(id).padStart(2,'0')+' はすでに存在します');return;}
+  const t=getType(addMatType);
+  state.mats[id]={id,type:addMatType,location:'warehouse',since:null,staff:''};
+  state.nextId=Math.max((state.nextId||1),id+1);
+  addHist(id,'—',today(),null,t.label+' 追加');
+  save();document.getElementById('modal-add').classList.remove('open');
+  renderAll();updateHistFilter();
+  showToast('#'+String(id).padStart(2,'0')+' '+t.label+' を追加しました');
+});
+
+// 番号編集モーダル
+function openEditIdModal(typeKey){
+  const mats=Object.values(state.mats).filter(m=>m.type===typeKey).sort((a,b)=>a.id-b.id);
+  if(!mats.length){showToast(getType(typeKey).label+'のマットがありません');return;}
+  const sel=document.getElementById('edit-id-select');sel.innerHTML='';
+  mats.forEach(m=>{
+    const opt=document.createElement('option');opt.value=m.id;
+    const loc=m.location==='warehouse'?'倉庫':m.location==='repair'?'修理中':bedLabel(m.location);
+    opt.textContent='#'+String(m.id).padStart(2,'0')+' ['+loc+']';
+    sel.appendChild(opt);
+  });
+  sel.onchange=()=>document.getElementById('edit-id-new').value=sel.value;
+  sel.dispatchEvent(new Event('change'));
+  document.getElementById('modal-edit-id').classList.add('open');
+}
+onTap(document.getElementById('edit-id-cancel'),()=>document.getElementById('modal-edit-id').classList.remove('open'));
+onTap(document.getElementById('edit-id-ok'),()=>{
+  const oldId=parseInt(document.getElementById('edit-id-select').value);
+  const newId=parseInt(document.getElementById('edit-id-new').value);
+  if(!newId||isNaN(newId)||newId<1){showToast('新しい番号を入力してください');return;}
+  if(oldId===newId){document.getElementById('modal-edit-id').classList.remove('open');return;}
+  if(state.mats[newId]){showToast('#'+String(newId).padStart(2,'0')+' はすでに存在します');return;}
+  const m=state.mats[oldId];
+  state.mats[newId]={...m,id:newId};
+  delete state.mats[oldId];
+  // 履歴のmat番号も更新
+  state.history.forEach(h=>{if(h.mat===oldId)h.mat=newId;});
+  save();document.getElementById('modal-edit-id').classList.remove('open');
+  renderAll();updateHistFilter();
+  showToast('#'+String(oldId).padStart(2,'0')+' → #'+String(newId).padStart(2,'0')+' に変更しました');
+});
+
+function openRemoveModalForType(typeKey){
+  const mats=Object.values(state.mats).filter(m=>m.type===typeKey).sort((a,b)=>a.id-b.id);
+  const sel=document.getElementById('remove-select');sel.innerHTML='';
+  mats.forEach(m=>{
+    const opt=document.createElement('option');opt.value=m.id;
+    const loc=m.location==='warehouse'?'倉庫':m.location==='repair'?'修理中':'使用中('+m.location+')';
+    opt.textContent='#'+String(m.id).padStart(2,'0')+' ['+loc+']';
+    sel.appendChild(opt);
+  });
+  sel.onchange=()=>{const m=state.mats[sel.value];document.getElementById('remove-warn').style.display=(m&&m.location!=='warehouse')?'block':'none';};
+  sel.dispatchEvent(new Event('change'));
+  document.getElementById('modal-remove').classList.add('open');
+}
+
+// 選択・移動
+function setSelected(id){
+  selectedId=id;
+  document.querySelectorAll('.mat-chip').forEach(c=>c.classList.remove('selected'));
+  document.querySelectorAll('.mat-chip[data-id="'+id+'"]').forEach(c=>c.classList.add('selected'));
+  document.querySelectorAll('.bed-slot,.zone-box').forEach(el=>el.classList.add('target-mode'));
+  document.getElementById('hint-bar').classList.add('show');
+  document.getElementById('cancel-bar').classList.add('show');
+}
+function clearSel(){
+  selectedId=null;
+  document.querySelectorAll('.mat-chip').forEach(c=>c.classList.remove('selected'));
+  document.querySelectorAll('.bed-slot,.zone-box').forEach(el=>el.classList.remove('target-mode'));
+  document.getElementById('hint-bar').classList.remove('show');
+  document.getElementById('cancel-bar').classList.remove('show');
+}
+onTap(document.getElementById('cancel-btn'),()=>clearSel());
+
+function moveMat(target){
+  if(selectedId===null)return;
+  const m=state.mats[selectedId];
+  if(!m){clearSel();return;}
+  if(m.location===target){clearSel();return;}
+  const prev=m.location,ml='#'+String(selectedId).padStart(2,'0');
+  const fromBed=prev!=='warehouse'&&prev!=='repair';
+  const toBed=target!=='warehouse'&&target!=='repair';
+  if(toBed){
+    const occ=Object.values(state.mats).find(x=>x.location===target&&x.id!==m.id);
+    if(occ){showToast(target+'はすでに使用中');clearSel();return;}
+  }
+  if(fromBed&&!toBed){
+    addHist(selectedId,prev,m.since,today(),target==='repair'?'修理へ':'返却');
+    m.location=target;m.since=target==='repair'?today():null;
+    showToast(target==='repair'?ml+'→修理中':ml+'→倉庫返却');
+  }else if(prev==='warehouse'&&toBed){
+    m.location=target;m.since=today();showToast(ml+'→'+target+' 使用開始');
+  }else if(prev==='warehouse'&&target==='repair'){
+    m.location='repair';m.since=today();showToast(ml+'→修理中');
+  }else if(prev==='repair'&&target==='warehouse'){
+    addHist(selectedId,'修理中',m.since,today(),'修理完了');
+    m.location='warehouse';m.since=null;showToast(ml+' 修理完了→倉庫');
+  }else if(prev==='repair'&&toBed){
+    addHist(selectedId,'修理中',m.since,today(),'修理後使用');
+    m.location=target;m.since=today();showToast(ml+'→'+target+' 使用開始');
+  }else if(fromBed&&toBed){
+    m.location=target;showToast(ml+'→'+target+' 移動');
+  }
+  save();clearSel();renderAll();
+}
+
+function makeChip(m){
+  const isFree=m.location==='warehouse';
+  const isRepair=m.location==='repair';
+  const t=getType(m.type);
+  const d=document.createElement('div');
+  d.className='mat-chip'+(isFree?' free':'');
+  if(!isFree){
+    d.style.background=t.bg;d.style.borderColor=t.border;d.style.color=t.text;
+    if(isRepair){d.style.opacity='.72';d.style.filter='saturate(.5)';}
+  }
+  d.dataset.id=m.id;
+  const since=(!isFree&&m.since)?'<div class="chip-since">'+fmtDate(m.since)+'〜</div>':'';
+  d.innerHTML='<div class="chip-num">#'+String(m.id).padStart(2,'0')+'</div><div class="chip-name">'+t.label+'</div>'+since;
+  onTap(d,e=>{
+    e.stopPropagation();
+    if(selectedId===null){setSelected(m.id);}
+    else if(selectedId===m.id){clearSel();}
+    else{moveMat(m.location);}
+  });
+  return d;
+}
+
+function renderAll(){
+  [...TOP_ROOMS,...BOT_ROOMS].forEach(room=>{
+    room.beds.forEach(bed=>{
+      const inner=document.getElementById('bi-'+bed);if(!inner)return;
+      inner.innerHTML='';
+      const mat=Object.values(state.mats).find(m=>m.location===bed);
+      if(mat)inner.appendChild(makeChip(mat));
+      else{const e=document.createElement('div');e.className='bed-empty';e.textContent='—';inner.appendChild(e);}
     });
-    if(bestDX<=GUIDE_THRESH){ x=snapXv; placeGuideV(guideXpos); } else { x=Math.round(x/SNAP)*SNAP; if(glV) glV.style.display="none"; }
-    if(bestDY<=GUIDE_THRESH){ y=snapYv; placeGuideH(guideYpos); } else { y=Math.round(y/SNAP)*SNAP; if(glH) glH.style.display="none"; }
-    x=Math.max(0,x); y=Math.max(0,y);
-    t.style.left=x+"px"; t.style.top=y+"px";
+  });
+  const whT=document.getElementById('wh-tokens');whT.innerHTML='';
+  Object.values(state.mats).filter(m=>m.location==='warehouse').sort((a,b)=>a.id-b.id).forEach(m=>whT.appendChild(makeChip(m)));
+  const rpT=document.getElementById('repair-tokens');rpT.innerHTML='';
+  Object.values(state.mats).filter(m=>m.location==='repair').forEach(m=>rpT.appendChild(makeChip(m)));
+  const total=Object.keys(state.mats).length;
+  const used=Object.values(state.mats).filter(m=>m.location!=='warehouse'&&m.location!=='repair').length;
+  const rep=Object.values(state.mats).filter(m=>m.location==='repair').length;
+  document.getElementById('cnt-total').textContent=total;
+  document.getElementById('cnt-use').textContent=used;
+  document.getElementById('cnt-free').textContent=total-used-rep;
+  document.getElementById('cnt-repair').textContent=rep;
+  document.getElementById('wh-total-num').textContent=total;
+  if(selectedId!==null){
+    document.querySelectorAll('.mat-chip[data-id="'+selectedId+'"]').forEach(c=>c.classList.add('selected'));
+    document.querySelectorAll('.bed-slot,.zone-box').forEach(el=>el.classList.add('target-mode'));
   }
-  function onUp(){
-    document.removeEventListener("pointermove",onMove);
-    document.removeEventListener("pointerup",onUp);
-    hideGuides();
-    setTilePos(t.dataset.tile, parseInt(t.style.left), parseInt(t.style.top));
-    renderMap(); saveState();
+  renderTypePanel();renderHistory();
+}
+
+function makeBedSlot(bed){
+  const slot=document.createElement('div');slot.className='bed-slot';
+  const suffix=bed.includes('-')?bed.split('-')[1]:'';
+  if(suffix){const bl=document.createElement('div');bl.className='bed-num-label';bl.textContent=suffix;slot.appendChild(bl);}
+  const inner=document.createElement('div');inner.id='bi-'+bed;inner.className='bed-inner';
+  slot.appendChild(inner);
+  onTap(slot,e=>{e.stopPropagation();if(selectedId!==null)moveMat(bed);});
+  return slot;
+}
+function buildRoom(room){
+  const block=document.createElement('div');block.className='room-block';
+  const lbl=document.createElement('div');lbl.className='room-num';
+  lbl.textContent=room.name||(room.id==='R'?'観察室':room.id+'号室');
+  block.appendChild(lbl);
+  const n=room.beds.length;
+  const grid=document.createElement('div');grid.className='bed-grid';
+  if(n===4){
+    grid.style.cssText='grid-template-columns:1fr 1fr;grid-template-rows:1fr 1fr;grid-template-areas:"b2 b3" "b1 b4"';
+    const[b1,b2,b3,b4]=room.beds;
+    const s1=makeBedSlot(b1);s1.style.gridArea='b1';
+    const s2=makeBedSlot(b2);s2.style.gridArea='b2';
+    const s3=makeBedSlot(b3);s3.style.gridArea='b3';
+    const s4=makeBedSlot(b4);s4.style.gridArea='b4';
+    [s1,s2,s3,s4].forEach(s=>grid.appendChild(s));
+  }else if(n===3){
+    grid.style.cssText='grid-template-columns:1fr 1fr;grid-template-rows:1fr 1fr;grid-template-areas:"b2 b3" "b1 ."';
+    const[b1,b2,b3]=room.beds;
+    const s1=makeBedSlot(b1);s1.style.gridArea='b1';
+    const s2=makeBedSlot(b2);s2.style.gridArea='b2';
+    const s3=makeBedSlot(b3);s3.style.gridArea='b3';
+    [s1,s2,s3].forEach(s=>grid.appendChild(s));
+  }else if(n===2){
+    grid.style.cssText='grid-template-columns:1fr;grid-template-rows:1fr 1fr;grid-template-areas:"b2" "b1"';
+    const[b1,b2]=room.beds;
+    const s1=makeBedSlot(b1);s1.style.gridArea='b1';
+    const s2=makeBedSlot(b2);s2.style.gridArea='b2';
+    [s1,s2].forEach(s=>grid.appendChild(s));
+  }else{
+    grid.style.cssText='grid-template-columns:1fr';
+    room.beds.forEach(b=>grid.appendChild(makeBedSlot(b)));
   }
-  document.addEventListener("pointermove",onMove);
-  document.addEventListener("pointerup",onUp);
+  block.appendChild(grid);return block;
+}
+
+TOP_ROOMS.forEach(r=>document.getElementById('top-row').appendChild(buildRoom(r)));
+BOT_ROOMS.forEach(r=>document.getElementById('bottom-row').appendChild(buildRoom(r)));
+onTap(document.getElementById('zone-warehouse'),e=>{e.stopPropagation();if(selectedId!==null)moveMat('warehouse');});
+onTap(document.getElementById('zone-repair'),e=>{e.stopPropagation();if(selectedId!==null)moveMat('repair');});
+
+// 削除モーダル
+onTap(document.getElementById('remove-cancel'),()=>document.getElementById('modal-remove').classList.remove('open'));
+onTap(document.getElementById('remove-ok'),()=>{
+  const id=parseInt(document.getElementById('remove-select').value);
+  const m=state.mats[id];if(!m)return;
+  if(m.location!=='warehouse')addHist(id,m.location,m.since,today(),'削除（廃棄）');
+  else addHist(id,'—',today(),today(),'削除（欠番）');
+  delete state.mats[id];
+  save();document.getElementById('modal-remove').classList.remove('open');
+  renderAll();updateHistFilter();
+  showToast('#'+String(id).padStart(2,'0')+' を削除しました');
+});
+document.querySelectorAll('.modal-bg').forEach(bg=>{
+  onTap(bg,e=>{if(e.target===bg)bg.classList.remove('open');});
 });
 
-mapEl.addEventListener("dragstart",e=>{
-  const chip=e.target.closest("[data-chip]"); if(!chip) return;
-  SEL=chip.dataset.chip; e.dataTransfer.setData("text/plain",chip.dataset.chip);
-  document.getElementById("hintbar").classList.remove("show");
-  // clean, un-clipped drag image (source chip may sit inside a scaled canvas)
-  const g=chip.cloneNode(true); g.classList.remove("sel");
-  g.style.cssText+=";position:absolute;top:-9999px;left:-9999px;margin:0";
-  document.body.appendChild(g); CHIP_GHOST=g;
-  try{ e.dataTransfer.setDragImage(g, g.offsetWidth/2, g.offsetHeight/2); }catch(_){}
+// 履歴
+function addHist(mat,bed,from,to,note){
+  state.history.unshift({mat,bed,from,to,days:to&&from?daysSince(from):0,note,staff:''});
+  if(state.history.length>500)state.history=state.history.slice(0,500);
+}
+function updateHistFilter(){
+  const sel=document.getElementById('hist-filter-mat');const cur=sel.value;
+  const ids=[...new Set(state.history.map(r=>r.mat))].sort((a,b)=>a-b);
+  sel.innerHTML='<option value="">全て</option>'+ids.map(id=>{
+    const m=state.mats[id];const t=m?getType(m.type):null;
+    return'<option value="'+id+'"'+(id==cur?' selected':'')+'>#'+String(id).padStart(2,'0')+' '+(t?t.label:'')+'</option>';
+  }).join('');
+}
+function renderHistory(){
+  const tb=document.getElementById('hist-body');
+  const fm=document.getElementById('hist-filter-mat').value;
+  const lim=parseInt(document.getElementById('hist-limit').value)||15;
+  let h=state.history;
+  if(fm)h=h.filter(r=>String(r.mat)===String(fm));
+  h=h.slice(0,lim);
+  if(!h.length){tb.innerHTML='<tr><td colspan="6" style="padding:8px;color:#A1887F">履歴なし</td></tr>';return;}
+  tb.innerHTML=h.map(r=>{
+    const m=state.mats[r.mat];const t=m?getType(m.type):TYPES[0];
+    const dot='<span style="display:inline-block;width:9px;height:9px;border-radius:50%;background:'+t.bg+';border:1.5px solid '+t.border+';margin-right:3px;vertical-align:middle"></span>';
+    return'<tr><td>'+dot+'#'+String(r.mat).padStart(2,'0')+' <span style="font-size:9px;color:#A1887F">'+t.label+'</span></td>'
+      +'<td>'+r.bed+'</td><td>'+fmtDate(r.from)+'</td>'
+      +'<td>'+(r.to?fmtDate(r.to):'使用中')+'</td>'
+      +'<td>'+(r.days?r.days+'日':'')+'</td>'
+      +'<td style="color:#A1887F">'+(r.staff||'—')+'</td></tr>';
+  }).join('');
+}
+document.getElementById('hist-filter-mat').addEventListener('change',renderHistory);
+document.getElementById('hist-limit').addEventListener('change',renderHistory);
+
+// ベッドIDを「〇号室〇番」形式に変換
+function bedLabel(bed){
+  if(!bed||bed==='—')return bed||'—';
+  if(bed==='warehouse')return '倉庫';
+  if(bed==='repair')return '修理中';
+  const allRooms=[...TOP_ROOMS,...BOT_ROOMS];
+  for(const room of allRooms){
+    if(room.beds.includes(bed)){
+      const rname=room.name||(room.id==='R'?'観察室':room.id+'号室');
+      const bnum=bed.includes('-')?bed.split('-')[1]:bed;
+      return rname+(bnum&&bnum!==room.id?' '+bnum+'番':'');
+    }
+  }
+  return bed;
+}
+
+// CSV出力
+function toCSV(rows){
+  const header=['マット番号','種類','場所','開始日','終了日','日数','担当','備考'];
+  const lines=[header.join(',')];
+  rows.forEach(r=>{
+    const m=state.mats[r.mat];const t=m?getType(m.type):{label:''};
+    lines.push(['#'+String(r.mat).padStart(2,'0'),t.label,bedLabel(r.bed),r.from||'',r.to||'',r.days||'',r.staff||'',r.note||''].join(','));
+  });
+  return lines.join('\n');
+}
+function downloadCSV(csv,filename){
+  const bom='\uFEFF';
+  try{
+    const blob=new Blob([bom+csv],{type:'text/csv;charset=utf-8;'});
+    const url=URL.createObjectURL(blob);
+    const a=document.createElement('a');a.href=url;a.download=filename;
+    document.body.appendChild(a);a.click();document.body.removeChild(a);
+    setTimeout(()=>URL.revokeObjectURL(url),1000);
+  }catch(e){
+    const dataUrl='data:text/csv;charset=utf-8,'+encodeURIComponent(bom+csv);
+    window.open(dataUrl,'_blank');
+  }
+}
+onTap(document.getElementById('export-all-btn'),()=>{
+  if(!state.history.length){showToast('履歴がありません');return;}
+  downloadCSV(toCSV(state.history),'エアマット履歴_全件.csv');
+  showToast('ダウンロードしました');
 });
-mapEl.addEventListener("dragover",e=>{
-  const dz=e.target.closest("[data-drop]"); if(dz){ e.preventDefault(); dz.classList.add("drop-ok"); }
+onTap(document.getElementById('export-month-btn'),()=>{
+  const ym=today().slice(0,7);
+  const rows=state.history.filter(r=>r.from&&r.from.startsWith(ym));
+  if(!rows.length){showToast('今月の履歴がありません');return;}
+  downloadCSV(toCSV(rows),'エアマット履歴_'+ym+'.csv');
+  showToast('ダウンロードしました');
 });
-mapEl.addEventListener("dragleave",e=>{ const dz=e.target.closest("[data-drop]"); if(dz) dz.classList.remove("drop-ok"); });
-mapEl.addEventListener("drop",e=>{
-  const dz=e.target.closest("[data-drop]"); if(!dz) return; e.preventDefault(); dz.classList.remove("drop-ok");
-  const id=e.dataTransfer.getData("text/plain"); if(!id) return; SEL=id; tryDrop(JSON.parse(dz.dataset.drop));
-});
-mapEl.addEventListener("dragend",()=>{
-  if(CHIP_GHOST){ CHIP_GHOST.remove(); CHIP_GHOST=null; }
-  if(!editing && !document.getElementById("hintbar").classList.contains("show")) SEL=null;
+onTap(document.getElementById('export-text-btn'),()=>{
+  const ta=document.getElementById('export-textarea');
+  const bom='\uFEFF';
+  const csv=toCSV(state.history);
+  if(!state.history.length){showToast('履歴がありません');return;}
+  ta.value=csv;
+  ta.style.display=ta.style.display==='none'?'block':'none';
+  if(ta.style.display==='block'){ta.select();showToast('全選択してコピーしてください');}
 });
 
-window.addEventListener("resize",()=>{ if(document.getElementById("map").classList.contains("on")) fitMap(); });
+let toastTimer=null;
+function showToast(msg){
+  const t=document.getElementById('toast');t.textContent=msg;t.classList.add('show');
+  clearTimeout(toastTimer);toastTimer=setTimeout(()=>t.classList.remove('show'),2500);
+}
 
-if(!loadState()) initData();
-refreshUsers(); renderAll();
-requestAnimationFrame(fitMap);
-window.addEventListener("load",fitMap);
-setTimeout(fitMap,120);
+renderAll();updateHistFilter();
 </script>
 </body>
 </html>
