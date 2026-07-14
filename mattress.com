@@ -74,8 +74,8 @@
   .loan-warn{display:block;margin-top:2px;font-size:9px;font-weight:700;color:#c0392b;background:#fde3e1;border-radius:4px;padding:1px 3px}
   .chip.sel{box-shadow:0 0 0 3px #ffd27a;cursor:grabbing}
 
-  .ns{background:var(--indigo);color:#333;border-radius:40%;display:flex;align-items:center;justify-content:center;
-      font-weight:700;letter-spacing:.03em;width:118px;height:70px;padding:8px;text-align:center;line-height:1.3;position:absolute}
+  .ns{background:var(--indigo);color:#333;border-radius:10px;display:flex;align-items:center;justify-content:center;
+      font-weight:700;letter-spacing:.03em;width:118px;height:44px;padding:6px 16px;text-align:center;line-height:1.3;position:absolute}
   .ns-handle{position:absolute;right:4px;bottom:4px;width:28px;height:28px;cursor:nwse-resize;display:none;touch-action:none;z-index:5}
   .ns-handle::after{content:"";position:absolute;right:6px;bottom:6px;width:12px;height:12px;
       border-right:3px solid rgba(255,255,255,.9);border-bottom:3px solid rgba(255,255,255,.9);border-radius:0 0 3px 0}
@@ -218,6 +218,7 @@ const SNAP=10;
 function initData(){
   USERS=["看護師A","看護師B","看護師C","師長"];
   ROOMS=[
+    {key:"r17",name:"17号室",band:"top",bedCount:3},
     {key:"r16",name:"16号室",band:"top",bedCount:1},{key:"r15",name:"15号室",band:"top",bedCount:1},
     {key:"r14",name:"14号室",band:"top",bedCount:1},{key:"r13",name:"13号室",band:"top",bedCount:1},
     {key:"r12",name:"12号室",band:"top",bedCount:1},{key:"r11",name:"11号室",band:"top",bedCount:1},
@@ -225,21 +226,19 @@ function initData(){
     {key:"r8",name:"8号室",band:"top",bedCount:1},{key:"r7",name:"7号室",band:"top",bedCount:1},
     {key:"r6",name:"6号室",band:"top",bedCount:4},{key:"r5",name:"5号室",band:"top",bedCount:4},
     {key:"r4",name:"4号室",band:"top",bedCount:4},{key:"r3",name:"3号室",band:"top",bedCount:4},
-    {key:"r17",name:"17号室",band:"midL",bedCount:3},
-    {key:"r2",name:"2号室",band:"midR",bedCount:1},
     {key:"r18",name:"18号室",band:"bottom",bedCount:2},{key:"r19",name:"19号室",band:"bottom",bedCount:3},
     {key:"r20",name:"20号室",band:"bottom",bedCount:1},{key:"r21",name:"21号室",band:"bottom",bedCount:1},
     {key:"r22",name:"22号室",band:"bottom",bedCount:1},{key:"r23",name:"23号室",band:"bottom",bedCount:1},
-    {key:"obs",name:"観察室",band:"bottom",bedCount:4},
+    {key:"obs",name:"R室",band:"bottom",bedCount:4},
   ];
   M={};
   const s=(id,type,loc)=>M[id]={id,type,loc};
   s("ム1","mu",{k:"room",room:"obs",bed:2}); s("ム2","mu",{k:"room",room:"r23",bed:1});
   s("ム3","mu",{k:"room",room:"obs",bed:3});
   s("ス1","st",{k:"repair"}); s("ス2","st",{k:"room",room:"r9",bed:3});
-  s("ア1","ad",{k:"room",room:"obs",bed:1}); s("ア2","ad",{k:"room",room:"r6",bed:2});
+  s("ア1","ad",{k:"room",room:"obs",bed:4}); s("ア2","ad",{k:"room",room:"r6",bed:2});
   s("ア3","ad",{k:"store"}); s("ア4","ad",{k:"store"});
-  s("オ1","os",{k:"room",room:"r22",bed:1}); s("オ2","os",{k:"store"}); s("オ3","os",{k:"store"});
+  s("オ1","os",{k:"room",room:"r20",bed:1}); s("オ2","os",{k:"store"}); s("オ3","os",{k:"store"});
   HISTORY=[];
   const base=new Date(); base.setDate(base.getDate()-7); base.setHours(9,0,0,0);
   Object.values(M).forEach((m,i)=>HISTORY.push({ts:new Date(base.getTime()+i*60000),id:m.id,type:m.type,from:"—（初期登録）",to:locLabel(m.loc),user:"初期設定"}));
@@ -251,17 +250,23 @@ const estW=r=>colsOf(r)===1?86:152;
 function layoutInit(){
   const GAP=4;
   let x=14;
+  // 上段
   ROOMS.filter(r=>r.band==="top").forEach(r=>{ r.x=x; r.y=14; x+=estW(r)+GAP; });
-  const midY=176;
-  x=14;
-  ROOMS.filter(r=>r.band==="midL").forEach(r=>{ r.x=x; r.y=midY; x+=estW(r)+GAP; });
+  const totalW=x+14;
+  const midY=196;
   TILES={};
-  TILES.ns={x:x+34,y:midY+4,w:118,h:70};   x+=190;
-  TILES.store={x:x+18,y:midY-30}; TILES.repair={x:x+18,y:midY+140}; TILES.loan={x:x+200,y:midY-30}; x+=400;
-  ROOMS.filter(r=>r.band==="midR").forEach(r=>{ r.x=x; r.y=midY; x+=estW(r)+GAP; });
-  const botY=366;
+  // NSを横長バーとして上段全体幅に合わせる
+  TILES.ns={x:14,y:midY,w:Math.max(300,totalW-28),h:44};
+  // 下段
+  const botY=midY+60;
   x=14;
   ROOMS.filter(r=>r.band==="bottom").forEach(r=>{ r.x=x; r.y=botY; x+=estW(r)+GAP; });
+  const botEndX=x+14;
+  // 倉庫・修理中・貸出
+  const zoneY=botY+180;
+  TILES.store={x:14,y:zoneY};
+  TILES.repair={x:200,y:zoneY};
+  TILES.loan={x:390,y:zoneY};
 }
 
 /* ---------- helpers ---------- */
